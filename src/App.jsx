@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
+import SplashScreen from './components/SplashScreen';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Notification from './pages/Notification';
@@ -95,13 +96,20 @@ const AppContent = () => {
 };
 
 const App = () => {
+  const [splashDone, setSplashDone] = useState(false);
+
   return (
-    <AuthProvider>
-      <Router>
-        <ScrollToTop />
-        <AppContent />
-      </Router>
-    </AuthProvider>
+    <>
+      {!splashDone && <SplashScreen onDone={() => setSplashDone(true)} />}
+      {splashDone && (
+        <AuthProvider>
+          <Router>
+            <ScrollToTop />
+            <AppContent />
+          </Router>
+        </AuthProvider>
+      )}
+    </>
   );
 };
 
