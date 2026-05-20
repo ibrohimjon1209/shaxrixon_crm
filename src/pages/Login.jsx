@@ -35,10 +35,6 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Check for default credentials
-    const cleanPhone = cleanPhoneNumber(formData.phone);
-    const isDefaultCredentials = cleanPhone === '+998111111111' && formData.password === 'nsdadmin123';
-    
     // Simulate validation
     const newErrors = {};
     if (!formData.phone || formData.phone === '+998') {
@@ -101,10 +97,8 @@ const Login = () => {
           {/* Header Section */}
           <div className="text-center mb-10">
             {/* Logo */}
-            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-500 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg">
-              <svg className="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-2-11c0 .55-.45 1-1 1s-1-.45-1-1 .45-1 1-1 1 .45 1 1zm6 0c0 .55-.45 1-1 1s-1-.45-1-1 .45-1 1-1 1 .45 1 1zm-3 7c-2.33 0-4.31-1.46-5.11-3.5h10.22c-.8 2.04-2.78 3.5-5.11 3.5z"/>
-              </svg>
+            <div className="w-20 h-20 bg-blue-600 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg">
+              <span className="text-4xl font-bold text-white">B</span>
             </div>
             
             {/* App name */}
@@ -176,8 +170,8 @@ const Login = () => {
               )}
             </div>
 
-            {/* Remember Me & Forgot Password */}
-            <div className="flex items-center justify-between">
+            {/* Remember Me */}
+            <div className="flex items-center">
               <label className="flex items-center">
                 <input
                   type="checkbox"
@@ -185,12 +179,6 @@ const Login = () => {
                 />
                 <span className="ml-2 text-sm text-gray-600">Eslab qolish</span>
               </label>
-              <button
-                type="button"
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
-              >
-                Parolni unutdingizmi?
-              </button>
             </div>
 
             {/* General Error */}
@@ -220,14 +208,6 @@ const Login = () => {
             </button>
           </form>
 
-          {/* Default Credentials Info */}
-          <div className="mt-8 bg-blue-50 border border-blue-200 rounded-xl p-4">
-            <p className="text-xs text-blue-700 text-center">
-              <span className="font-semibold">Default login:</span><br/>
-              Telefon: +998 11 111 11 11<br/>
-              Parol: nsdadmin123
-            </p>
-          </div>
         </div>
       </div>
 

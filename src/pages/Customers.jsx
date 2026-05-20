@@ -4,10 +4,10 @@ import { motion, AnimatePresence, useMotionValue, useTransform, animate } from '
 import {
   FiPlus, FiSearch, FiPhone, FiEdit,
   FiTrash2, FiMessageCircle, FiFileText, FiX, FiCheckCircle,
-  FiMapPin, FiCalendar, FiCreditCard, FiShare2, FiLoader, FiUsers
+  FiMapPin, FiCalendar, FiCreditCard, FiLoader, FiUsers
 } from 'react-icons/fi';
 import { FiSend } from 'react-icons/fi';
-import { useCustomers, useDebtors, useCreateCustomer, useUpdateCustomer, useDeleteCustomer, usePayDebt, useSendDebtReminder, useGetBotLink, useUnlinkTelegram } from '../hooks/useCustomers';
+import { useCustomers, useDebtors, useCreateCustomer, useUpdateCustomer, useDeleteCustomer, usePayDebt, useSendDebtReminder, useUnlinkTelegram } from '../hooks/useCustomers';
 import { toast } from 'react-toastify';
 import { formatPhoneNumber, cleanPhoneNumber } from '../utils/phoneFormat';
 
@@ -135,11 +135,9 @@ const SwipeableCustomerCard = ({ customer, onClick, onEdit, onDelete }) => {
 const CustomerDetailModal = ({ customer, onClose, onViewReceipt }) => {
   const [showPayForm, setShowPayForm] = useState(false);
   const [payAmount, setPayAmount] = useState('');
-  const [botLink, setBotLink] = useState(null);
 
   const payDebtMutation = usePayDebt();
   const sendReminderMutation = useSendDebtReminder();
-  const getBotLinkMutation = useGetBotLink();
   const unlinkMutation = useUnlinkTelegram();
 
   if (!customer) return null;
@@ -164,14 +162,6 @@ const CustomerDetailModal = ({ customer, onClose, onViewReceipt }) => {
   const handleSendReminder = async () => {
     try {
       await sendReminderMutation.mutateAsync(customer.id);
-    } catch (error) {}
-  };
-
-  const handleGetBotLink = async () => {
-    try {
-      const data = await getBotLinkMutation.mutateAsync(customer.id);
-      const link = data?.bot_link || data?.link || data?.url || data?.invite_link;
-      setBotLink(link || JSON.stringify(data));
     } catch (error) {}
   };
 
@@ -346,29 +336,6 @@ const CustomerDetailModal = ({ customer, onClose, onViewReceipt }) => {
           </div>
         )}
 
-        {/* Bot link */}
-        {botLink ? (
-          <div className="bg-blue-50 rounded-2xl p-4 border border-blue-100">
-            <p className="text-[11px] text-gray-400 mb-2">Bot linki:</p>
-            <a
-              href={botLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 font-medium text-sm break-all underline"
-            >
-              {botLink}
-            </a>
-          </div>
-        ) : (
-          <button
-            onClick={handleGetBotLink}
-            disabled={getBotLinkMutation.isPending}
-            className="w-full bg-gray-100 text-gray-700 rounded-2xl py-3.5 font-bold flex items-center justify-center gap-2 text-sm disabled:opacity-50 hover:bg-gray-200 transition-colors"
-          >
-            {getBotLinkMutation.isPending ? <FiLoader className="animate-spin w-4 h-4" /> : <FiShare2 className="w-4 h-4" />}
-            Bot Linki Olish
-          </button>
-        )}
       </div>
     </motion.div>
   );
