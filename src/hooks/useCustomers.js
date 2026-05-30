@@ -99,9 +99,9 @@ export const usePayDebt = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }) => customerService.payDebt(id, data),
-    onSuccess: (data) => {
+    onSuccess: (_, variables) => {
       queryClient.refetchQueries({ queryKey: ['customers'] });
-      queryClient.refetchQueries({ queryKey: ['customer', data.id] });
+      queryClient.refetchQueries({ queryKey: ['customer', variables.id] });
       toast.success("Qarz to'lovi muvaffaqiyatli amalga oshirildi");
     },
     onError: (err) => toast.error(getErrorMsg(err)),

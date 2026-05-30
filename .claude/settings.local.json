@@ -7,6 +7,7 @@
       "Bash(Remove-Item \"D:\\\\Visual Studios\\\\FullStack\\\\balon_market_crm\\\\src\\\\services\\\\warehouse.service.js\" -Force)",
       "Bash(Write-Host \"Deleted duplicate service files\")",
       "Bash(npx tsc *)",
+<<<<<<< HEAD
       "Bash(curl -s -X POST https://apibcrm.nsdcorporation.uz/api/auth/login/ -H 'Content-Type: application/json' -d '{\"phone\":\"+998111111111\",\"password\":\"nsdadmin123\"}')",
       "Bash(grep -o '\"phone.*0001\"' \"C:\\\\Users\\\\User\\\\.claude\\\\projects\\\\c--Users-User-Desktop-real-projects-balon-market-crm\\\\dc9d53c6-07fd-4cd0-bb82-fc0f752dd410.jsonl\" 2>/dev/null | head -5)",
       "Read(//c/Users/User/.claude/projects/c--Users-User-Desktop-real-projects-balon-market-crm/**)",
@@ -36,6 +37,9 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://apibcrm.nsdcorporation.uz/api/products/)",
       "Bash(curl -s -X POST \"https://apibcrm.nsdcorporation.uz/api/auth/login/\" -H \"Content-Type: application/json\" -d \"{\\\\\"phone\\\\\":\\\\\"+998900000001\\\\\",\\\\\"password\\\\\":\\\\\"Admin#2026!Bcrm\\\\\"}\")",
       "Bash(curl -s \"https://apibcrm.nsdcorporation.uz/api/schema/\")"
+=======
+      "Bash(node scripts/update-prices.js eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc5NTA4NDkzLCJpYXQiOjE3Nzk0MjIwOTMsImp0aSI6ImEyZGZjZjllYTk3NzQxOTFhNjA0YjMyZWFlMmE1MTgwIiwidXNlcl9pZCI6Mn0.pCBXhFhu6dXU_wR6txbJzmDbwymn1f4vxewWqP-_TG4)"
+>>>>>>> 9ce04d20862b73a6bbfce750525db4b645809de8
     ]
   }
 }

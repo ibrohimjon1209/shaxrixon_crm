@@ -70,7 +70,7 @@ const Home = () => {
               className="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center text-white relative hover:bg-white/20 transition-colors"
             >
               <FiBell className="w-5 h-5" />
-              {lowStockProducts.length > 0 && (
+              {lowStockProducts.length > 0 && lowStockProducts.length !== parseInt(localStorage.getItem('lastSeenLowStockCount') ?? '-1') && (
                 <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-400 rounded-full border-2 border-[#1447E6]" />
               )}
             </button>
@@ -195,7 +195,7 @@ const Home = () => {
 
             {/* Low stock */}
             {lowStockProducts.length > 0 && (
-              <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-5">
+              <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-5 mt-4">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <div className="w-7 h-7 bg-red-50 rounded-xl flex items-center justify-center">

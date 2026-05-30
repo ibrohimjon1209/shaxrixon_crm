@@ -22,7 +22,7 @@ export const useCreateProduct = () => {
   return useMutation({
     mutationFn: (data) => productService.createProduct(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.refetchQueries({ queryKey: ['products'] });
       toast.success('Mahsulot muvaffaqiyatli qo\'shildi');
     },
   });
@@ -33,8 +33,8 @@ export const useUpdateProduct = () => {
   return useMutation({
     mutationFn: ({ id, data }) => productService.updateProduct(id, data),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['products'] });
-      queryClient.invalidateQueries({ queryKey: ['product', data.id] });
+      queryClient.refetchQueries({ queryKey: ['products'] });
+      queryClient.refetchQueries({ queryKey: ['product', data.id] });
       toast.success('Mahsulot muvaffaqiyatli yangilandi');
     },
   });
@@ -45,7 +45,7 @@ export const useDeleteProduct = () => {
   return useMutation({
     mutationFn: (id) => productService.deleteProduct(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.refetchQueries({ queryKey: ['products'] });
       toast.success('Mahsulot muvaffaqiyatli o\'chirildi');
     },
   });
@@ -98,9 +98,9 @@ export const useLowStockProducts = () => {
   });
 };
 
-export const useProductsForSale = () => {
+export const useProductsForSale = (params) => {
   return useQuery({
-    queryKey: ['products', 'for_sale'],
-    queryFn: () => productService.getProductsForSale(),
+    queryKey: ['products', 'for_sale', params],
+    queryFn: () => productService.getProductsForSale(params),
   });
 };

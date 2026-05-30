@@ -102,8 +102,8 @@ const productService = {
    * Get products for sale (quantity > 0)
    * @returns {Promise<Product[]>}
    */
-  getProductsForSale: async () => {
-    const response = await api.get('/api/products/for_sale/');
+  getProductsForSale: async (params = {}) => {
+    const response = await api.get('/api/products/', { params });
     return response.data;
   },
 

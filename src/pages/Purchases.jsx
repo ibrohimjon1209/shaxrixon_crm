@@ -3,7 +3,9 @@ import {
   FiPlus, FiSearch, FiPackage, FiTruck, FiX, FiCheck,
   FiMinus, FiLoader, FiTrash2, FiEdit
 } from 'react-icons/fi';
+import { useQueries } from '@tanstack/react-query';
 import { usePurchases, usePurchaseDetail, useCreatePurchase, useUpdatePurchase, useDeletePurchase } from '../hooks/usePurchases';
+import purchaseService from '../services/purchase.service';
 import { useProducts } from '../hooks/useProducts';
 import { toast } from 'react-toastify';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -27,6 +29,20 @@ const Purchases = () => {
 
   const purchases = purchasesData?.results || [];
   const products = productsData?.results || [];
+
+  const purchaseDetails = useQueries({
+    queries: purchases.map(p => ({
+      queryKey: ['purchase-detail', p.id],
+      queryFn: () => purchaseService.getPurchase(p.id),
+      staleTime: 5 * 60 * 1000,
+    }))
+  });
+
+  const getItemsCount = (purchaseId) => {
+    const idx = purchases.findIndex(p => p.id === purchaseId);
+    const detail = purchaseDetails[idx]?.data;
+    return detail?.items?.reduce((s, i) => s + (i.quantity || 0), 0) ?? null;
+  };
 
   const filteredPurchases = searchTerm
     ? purchases.filter(p => p.id?.toString().includes(searchTerm))
@@ -157,12 +173,12 @@ const Purchases = () => {
                   <div>
                     <h3 className="font-bold text-gray-900 text-sm">Xarid #{purchase.id}</h3>
                     <p className="text-[10px] text-gray-400 mt-0.5">
-                      {new Date(purchase.created_at).toLocaleDateString()} • {purchase.item_count || 0} ta mahsulot
+                      {new Date(purchase.created_at).toLocaleDateString()} • {getItemsCount(purchase.id) ?? '...'} ta mahsulot
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-black text-gray-900">{parseFloat(purchase.total || 0).toLocaleString()} so'm</p>
+
                   <div className="flex flex-col gap-1">
                     <button
                       onClick={(e) => { e.stopPropagation(); openEditModal(purchase); }}
@@ -388,15 +404,8 @@ const Purchases = () => {
                 <div className="space-y-2 mb-5">
                   {(purchaseDetail || viewPurchase).items?.map(item => (
                     <div key={item.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
-                      <div className="flex-1">
-                        <p className="text-sm font-bold text-gray-900">{item.product_name}</p>
-                        <p className="text-[10px] text-gray-500">
-                          {item.quantity} × {parseFloat(item.cost_price || 0).toLocaleString()} so'm
-                        </p>
-                      </div>
-                      <p className="text-sm font-black text-[#1447E6]">
-                        {parseFloat(item.subtotal || 0).toLocaleString()} so'm
-                      </p>
+                      <p className="text-sm font-bold text-gray-900">{item.product_name}</p>
+                      <span className="text-sm font-black text-[#1447E6]">{item.quantity} dona</span>
                     </div>
                   ))}
                 </div>
@@ -409,9 +418,9 @@ const Purchases = () => {
                 )}
 
                 <div className="pt-4 border-t border-dashed border-gray-200 flex justify-between items-center">
-                  <span className="text-sm font-bold text-gray-500">Jami summa:</span>
+                  <span className="text-sm font-bold text-gray-500">Jami miqdor:</span>
                   <span className="text-xl font-black text-gray-900">
-                    {parseFloat((purchaseDetail || viewPurchase).total || 0).toLocaleString()} so'm
+                    {(purchaseDetail || viewPurchase).items?.reduce((s, i) => s + (i.quantity || 0), 0)} dona
                   </span>
                 </div>
               </div>

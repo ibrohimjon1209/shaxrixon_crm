@@ -84,9 +84,9 @@ api.interceptors.response.use(
                         (response?.data && typeof response.data === 'object' ? Object.values(response.data).flat()[0] : null) ||
                         'Xatolik yuz berdi. Iltimos, qaytadan urinib ko\'ring.';
 
-    // Don't show toast for 401 (handled above) or 5xx on reports (backend issue, shown in UI)
+    // Don't show toast for 401/403 (handled above) or 5xx on reports (backend issue, shown in UI)
     const isReportEndpoint = originalRequest?.url?.includes('/api/reports/');
-    if (response?.status !== 401 && !(response?.status >= 500 && isReportEndpoint)) {
+    if (response?.status !== 401 && response?.status !== 403 && !(response?.status >= 500 && isReportEndpoint)) {
       toast.error(errorMessage);
     }
 

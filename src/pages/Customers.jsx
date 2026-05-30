@@ -440,7 +440,10 @@ const CustomerDetailModal = ({ customer, onClose, onDelete, onEdit }) => {
             ) : (
               <div className="grid grid-cols-2 gap-3">
                 <button
-                  onClick={() => setShowPayForm(true)}
+                  onClick={() => {
+                    setPayCurrency(debtUZS > 0 ? 'UZS' : 'USD');
+                    setShowPayForm(true);
+                  }}
                   className="bg-emerald-600 text-white rounded-2xl py-3.5 font-bold flex items-center justify-center gap-2 text-sm"
                 >
                   <FiCreditCard className="w-4 h-4" /> Qarz To'lash
