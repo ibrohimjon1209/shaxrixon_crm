@@ -56,11 +56,11 @@ const saleService = {
   },
 
   /**
-   * Get overdue sales (is_overdue=true)
+   * Get overdue sales (debt_due_date < today)
    * @returns {Promise<PaginatedResponse<Sale>>}
    */
   getOverdueSales: async () => {
-    const response = await api.get('/api/sales/', { params: { is_overdue: true } });
+    const response = await api.get('/api/sales/overdue/');
     return response.data;
   }
 };
