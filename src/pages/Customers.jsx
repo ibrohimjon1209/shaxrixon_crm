@@ -100,9 +100,6 @@ const SwipeableCustomerCard = ({ customer, onClick, onEdit, onDelete }) => {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-0.5">
               <h3 className="font-bold text-sm text-gray-900 truncate">{customer.name}</h3>
-              {customer.status === 'vip' && (
-                <span className="text-[9px] font-bold bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded-full shrink-0">VIP</span>
-              )}
             </div>
             <div className="flex items-center gap-1 text-gray-400 text-xs">
               <FiPhone className="w-3 h-3" />
@@ -213,9 +210,6 @@ const CustomerDetailModal = ({ customer, onClose, onDelete, onEdit }) => {
               <FiPhone className="w-3.5 h-3.5" />
               <span>{detail.phone}</span>
             </div>
-            {detail.status === 'vip' && (
-              <span className="text-[10px] font-bold bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full mt-1 inline-block">VIP</span>
-            )}
           </div>
         </div>
       </div>
@@ -225,16 +219,16 @@ const CustomerDetailModal = ({ customer, onClose, onDelete, onEdit }) => {
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 text-center">
             <span className="text-xs text-gray-500 block mb-1">Jami xaridlar</span>
-            {totalSpentUzs > 0 && <span className="font-bold text-gray-900 text-sm block">{totalSpentUzs.toLocaleString()} so'm</span>}
             {totalSpentUsd > 0 && <span className="font-bold text-emerald-600 text-sm block">${totalSpentUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>}
+            {totalSpentUzs > 0 && <span className="font-bold text-gray-900 text-sm block">{totalSpentUzs.toLocaleString()} so'm</span>}
             {!totalSpentUzs && !totalSpentUsd && <span className="font-bold text-gray-400 text-sm">—</span>}
           </div>
           <div className={`rounded-2xl p-4 shadow-sm border text-center ${hasDebt ? 'bg-red-50 border-red-100' : 'bg-blue-50 border-blue-100'}`}>
             <span className={`text-xs block mb-1 ${hasDebt ? 'text-red-500' : 'text-blue-600'}`}>Joriy qarz</span>
             {hasDebt ? (
               <>
-                {debtUZS > 0 && <span className="font-bold text-sm text-red-600 block">{debtUZS.toLocaleString()} so'm</span>}
                 {debtUSD > 0 && <span className="font-bold text-sm text-red-600 block">${debtUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>}
+                {debtUZS > 0 && <span className="font-bold text-sm text-red-600 block">{debtUZS.toLocaleString()} so'm</span>}
                 {debtDueDate && (
                   <span className={`text-[10px] font-bold mt-1.5 block ${isDebtOverdue ? 'text-red-500' : 'text-orange-500'}`}>
                     {isDebtOverdue ? '⚠ Muddati o\'tgan' : `Muddat: ${new Date(debtDueDate).toLocaleDateString('uz-UZ')}`}
@@ -518,19 +512,6 @@ export const AddEditCustomerModal = ({ initialData, onClose, onSave, isPending }
               placeholder="Toshkent shahri"
             />
           </div>
-          <div>
-            <label className="text-xs font-semibold text-gray-500 block mb-1.5">Mijoz holati</label>
-            <select
-              value={formData.status}
-              onChange={e => setFormData({ ...formData, status: e.target.value })}
-              className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3.5 px-4 text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1447E6]/20 focus:border-[#1447E6]"
-            >
-              <option value="active">Faol</option>
-              <option value="vip">VIP</option>
-              <option value="debtor">Qarzdor</option>
-              <option value="inactive">Nofaol</option>
-            </select>
-          </div>
           {initialData && (
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -682,7 +663,7 @@ const Customers = () => {
         </div>
 
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 mb-4">
-          {['Barchasi', 'Qarzdorlar', 'Faol', 'VIP'].map((filter) => (
+          {['Barchasi', 'Qarzdorlar'].map((filter) => (
             <button
               key={filter}
               onClick={() => setActiveFilter(filter)}

@@ -12,7 +12,7 @@ import { AddEditCustomerModal } from './Customers';
 import { AnimatePresence } from 'framer-motion';
 
 const ITEM_H = 52;
-const UZ_MONTHS = ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr'];
+const UZ_MONTHS = ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr'];
 
 const WheelCol = ({ items, value, onChange }) => {
   const ref = useRef(null);
@@ -124,7 +124,7 @@ const WheelDatePicker = ({ value, onChange }) => {
 
   useEffect(() => {
     const d = Math.min(day, daysInMonth);
-    onChange(`${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
+    onChange(`${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`);
   }, [day, month, year]);
 
   return (
@@ -148,7 +148,7 @@ const Sales = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [productPage, setProductPage] = useState(1);
   const [cart, setCart] = useState([]);
-  const [paymentType, setPaymentType] = useState('debt');
+  const [paymentType, setPaymentType] = useState('cash');
   const [customUzs, setCustomUzs] = useState('');
   const [customUsd, setCustomUsd] = useState('');
   const [selectedCurrency, setSelectedCurrency] = useState('UZS');
@@ -172,13 +172,14 @@ const Sales = () => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showEditSaleModal, setShowEditSaleModal] = useState(false);
   const [showDeleteSaleModal, setShowDeleteSaleModal] = useState(false);
+  const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
   const [editSaleData, setEditSaleData] = useState({ payment_method: 'cash', note: '', debt_due_date: '' });
 
   useEffect(() => {
     fetch('https://open.er-api.com/v6/latest/USD')
       .then(r => r.json())
       .then(data => { if (data.rates?.UZS) setUsdRate(Math.round(data.rates.UZS)); })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setRateLoading(false));
   }, []);
 
@@ -309,12 +310,8 @@ const Sales = () => {
 
   const handleCompleteSale = async () => {
     if (cart.length === 0) return;
-    if (!selectedCustomer) {
-      toast.error('Mijozni tanlang');
-      return;
-    }
-    if (paymentType !== 'debt' && ((cartHasUzs && !customUzs) || (cartHasUsd && !customUsd))) {
-      toast.error('To\'lov summasini kiriting');
+    if (paymentType === 'debt' && !selectedCustomer) {
+      toast.error('Nasiya uchun mijozni tanlang');
       return;
     }
 
@@ -325,7 +322,7 @@ const Sales = () => {
     const usdScale = cartHasUsd && customUsdAmount > 0 && defaultUsd > 0 ? customUsdAmount / defaultUsd : 1;
 
     const payload = {
-      customer: selectedCustomer.id,
+      ...(selectedCustomer ? { customer: selectedCustomer.id } : {}),
       payment_method: paymentType,
       ...(paymentType === 'debt' ? { ...(debtDueDate ? { debt_due_date: debtDueDate } : {}), ...(debtNote ? { note: debtNote } : {}) } : {}),
       items: cart.map(item => {
@@ -350,9 +347,9 @@ const Sales = () => {
         paymentType === 'debt'
           ? { uzs: 0, usd: 0 }
           : {
-              uzs: customUzsAmount > 0 ? customUzsAmount : defaultUzs,
-              usd: customUsdAmount > 0 ? customUsdAmount : defaultUsd,
-            }
+            uzs: customUzsAmount > 0 ? customUzsAmount : defaultUzs,
+            usd: customUsdAmount > 0 ? customUsdAmount : defaultUsd,
+          }
       );
       setShowDebtModal(false);
       setShowCompletion(true);
@@ -402,11 +399,11 @@ const Sales = () => {
                 <p className="text-2xl font-black text-orange-500">Nasiya</p>
               ) : (
                 <>
-                  {saleAmounts.uzs > 0 && (
-                    <p className="text-2xl font-black text-[#1447E6]">{saleAmounts.uzs.toLocaleString()} so'm</p>
-                  )}
                   {saleAmounts.usd > 0 && (
                     <p className="text-2xl font-black text-emerald-600">${saleAmounts.usd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                  )}
+                  {saleAmounts.uzs > 0 && (
+                    <p className="text-2xl font-black text-[#1447E6]">{saleAmounts.uzs.toLocaleString()} so'm</p>
                   )}
                 </>
               )}
@@ -516,41 +513,22 @@ const Sales = () => {
             <h1 className="text-xl font-bold text-gray-900">Sotuv</h1>
             <p className="text-xs text-gray-400">Yangi buyurtma rasmiylashtirish</p>
           </div>
+          <button
+            onClick={() => setShowHistoryDrawer(true)}
+            className="flex items-center gap-2 bg-[#1447E6] text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-sm hover:bg-blue-700 active:scale-95 transition-all"
+          >
+            <FiShoppingCart className="w-3.5 h-3.5" />
+            Tarix
+            {historyTotal > 0 && (
+              <span className="bg-white/20 px-1.5 py-0.5 rounded-lg text-[10px] font-black">{historyTotal}</span>
+            )}
+          </button>
         </div>
       </div>
 
       <div className="px-4 py-4 space-y-4">
         {/* Customer selector */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Mijozni tanlash</label>
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiUser className="text-gray-400 w-4 h-4" />
-              </div>
-              <select
-                value={selectedCustomer?.id || ''}
-                onChange={(e) => {
-                  const id = e.target.value;
-                  const customer = customers.find(c => c.id.toString() === id);
-                  setSelectedCustomer(customer || null);
-                }}
-                className="w-full pl-9 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-[#1447E6]/20 focus:border-[#1447E6] transition-all text-gray-900 font-medium text-sm appearance-none outline-none"
-              >
-                <option value="">Mijozni tanlang...</option>
-                {customers.map(c => (
-                  <option key={c.id} value={c.id}>{c.name} ({c.phone})</option>
-                ))}
-              </select>
-            </div>
-            <button
-              onClick={() => setIsAddCustomerModalOpen(true)}
-              className="w-[46px] h-[46px] shrink-0 bg-[#1447E6] hover:bg-blue-700 text-white rounded-xl flex items-center justify-center transition-colors shadow-sm"
-            >
-              <FiPlus className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
+
 
         {/* Product selection */}
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
@@ -580,7 +558,7 @@ const Sales = () => {
               const priceUzs = isUzsProduct ? parseFloat(product.sale_price || 0) : 0;
               const priceUsd = !isUzsProduct ? parseFloat(product.sale_price || 0) : 0;
               const isHighPrice = priceUzs > 1000000 || priceUsd > 100;
-              
+
               return (
                 <div
                   key={product.id}
@@ -647,58 +625,67 @@ const Sales = () => {
           )}
         </div>
 
+
         {/* Cart */}
         {cart.length > 0 && (
-          <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-bold text-gray-900">Savatcha</h3>
-              <span className="bg-blue-50 text-[#1447E6] px-2.5 py-1 rounded-xl text-xs font-bold">{cart.length} ta</span>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="flex items-center justify-between px-4 pt-4 pb-2">
+              <p className="text-xs font-semibold text-gray-400">Savatcha <span className="text-[#1447E6]">{cart.length} ta</span></p>
             </div>
-
-            <div className="space-y-3">
-              {cart.map((item) => (
-                <div key={item.id} className="flex items-center gap-3 py-2.5 border-b border-gray-50 last:border-0">
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-gray-900 text-xs truncate">{item.name}</h4>
-                    <p className="text-[10px] text-gray-400">{item.price.toLocaleString()} {item.currency === 'USD' ? '$' : "so'm"}</p>
+            <div className="divide-y divide-gray-50">
+              {cart.map((item) => {
+                const isUsd = item.currency === 'USD';
+                const priceLabel = isUsd ? `$${item.price.toLocaleString()}` : `${item.price.toLocaleString()} so'm`;
+                const totalLabel = isUsd
+                  ? `$${(item.price * item.quantity).toLocaleString()}`
+                  : `${(item.price * item.quantity).toLocaleString()} so'm`;
+                return (
+                  <div key={item.id} className="px-4 py-3">
+                    {/* Top row: name + total */}
+                    <div className="flex items-center justify-between mb-2.5">
+                      <div className="flex-1 min-w-0 pr-2">
+                        <p className="font-bold text-gray-900 text-sm truncate">{item.name}</p>
+                        <p className="text-xs text-gray-400">{priceLabel} × {item.quantity}</p>
+                      </div>
+                      <p className={`text-sm font-black shrink-0 ${isUsd ? 'text-emerald-600' : 'text-[#1447E6]'}`}>{totalLabel}</p>
+                    </div>
+                    {/* Bottom row: - input + X */}
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => updateQuantity(item.id, -1)}
+                        className="w-11 h-11 rounded-2xl bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200 active:scale-90 transition-all"
+                      >
+                        <FiMinus className="w-5 h-5" />
+                      </button>
+                      <input
+                        type="number"
+                        min="1"
+                        max={item.maxQuantity}
+                        value={item.quantity}
+                        onChange={(e) => setQuantity(item.id, e.target.value)}
+                        onBlur={() => commitQuantity(item.id)}
+                        className="flex-1 h-11 text-center font-black text-gray-900 text-lg bg-gray-50 rounded-2xl outline-none border border-gray-100 focus:border-[#1447E6]"
+                      />
+                      <button
+                        onClick={() => updateQuantity(item.id, 1)}
+                        className="w-11 h-11 rounded-2xl bg-[#1447E6] flex items-center justify-center text-white hover:bg-blue-700 active:scale-90 transition-all"
+                      >
+                        <FiPlus className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() => removeFromCart(item.id)}
+                        className="w-11 h-11 rounded-2xl bg-red-500 flex items-center justify-center text-white hover:bg-red-600 active:scale-90 transition-all"
+                      >
+                        <FiX className="w-5 h-5" />
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center bg-gray-50 rounded-xl p-0.5">
-                    <button
-                      onClick={() => updateQuantity(item.id, -1)}
-                      className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-[#1447E6]"
-                    >
-                      <FiMinus className="w-3 h-3" />
-                    </button>
-                    <input
-                      type="number"
-                      min="1"
-                      max={item.maxQuantity}
-                      value={item.quantity}
-                      onChange={(e) => setQuantity(item.id, e.target.value)}
-                      onBlur={() => commitQuantity(item.id)}
-                      className="w-10 text-center font-bold text-gray-900 text-xs bg-transparent outline-none"
-                    />
-                    <button
-                      onClick={() => updateQuantity(item.id, 1)}
-                      className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-[#1447E6]"
-                    >
-                      <FiPlus className="w-3 h-3" />
-                    </button>
-                  </div>
-                  <p className="text-xs font-bold text-[#1447E6] min-w-[70px] text-right">
-                    {(item.price * item.quantity).toLocaleString()}
-                  </p>
-                  <button
-                    onClick={() => removeFromCart(item.id)}
-                    className="w-6 h-6 flex items-center justify-center text-gray-300 hover:text-red-400"
-                  >
-                    <FiX className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
+
 
         {/* Payment */}
         {cart.length > 0 && (
@@ -725,6 +712,39 @@ const Sales = () => {
                 </button>
               ))}
             </div>
+
+            {/* Mijoz — faqat nasiyada */}
+            {paymentType === 'debt' && (
+              <div className="mb-4">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Mijoz</label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <FiUser className="text-gray-400 w-4 h-4" />
+                    </div>
+                    <select
+                      value={selectedCustomer?.id || ''}
+                      onChange={(e) => {
+                        const id = e.target.value;
+                        setSelectedCustomer(customers.find(c => c.id.toString() === id) || null);
+                      }}
+                      className="w-full pl-9 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-[#1447E6]/20 focus:border-[#1447E6] text-gray-900 font-medium text-sm appearance-none outline-none"
+                    >
+                      <option value="">Mijozni tanlang...</option>
+                      {customers.map(c => (
+                        <option key={c.id} value={c.id}>{c.name} ({c.phone})</option>
+                      ))}
+                    </select>
+                  </div>
+                  <button
+                    onClick={() => setIsAddCustomerModalOpen(true)}
+                    className="w-[46px] h-[46px] shrink-0 bg-[#1447E6] hover:bg-blue-700 text-white rounded-xl flex items-center justify-center transition-colors"
+                  >
+                    <FiPlus className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            )}
 
             {paymentType !== 'debt' && (
               <div className="mb-4 space-y-3">
@@ -803,7 +823,7 @@ const Sales = () => {
             ) : (
               <button
                 onClick={handleCompleteSale}
-                disabled={createSaleMutation.isPending || !selectedCustomer || (cartHasUzs && !customUzs) || (cartHasUsd && !customUsd)}
+                disabled={createSaleMutation.isPending}
                 className="w-full py-4 bg-[#1447E6] text-white rounded-2xl font-bold text-sm hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {createSaleMutation.isPending ? <FiLoader className="animate-spin w-4 h-4" /> : <FiCheck className="w-4 h-4" />}
@@ -855,74 +875,81 @@ const Sales = () => {
         </div>
       )}
 
-      {/* ── Sales History ── */}
-      <div className="px-4 py-4 space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-bold text-gray-900">Sotuvlar tarixi</h2>
-          {historyTotal > 0 && (
-            <span className="text-xs font-bold text-[#1447E6] bg-blue-50 px-2.5 py-1 rounded-xl">{historyTotal} ta</span>
-          )}
-        </div>
-
-        {historyLoading && allHistorySales.length === 0 ? (
-          <div className="flex justify-center py-8 bg-white rounded-2xl border border-gray-100">
-            <FiLoader className="w-6 h-6 text-[#1447E6] animate-spin" />
-          </div>
-        ) : allHistorySales.length === 0 ? (
-          <div className="py-8 text-center bg-white rounded-2xl border border-gray-100">
-            <p className="text-sm text-gray-400">Hali sotuv yo'q</p>
-          </div>
-        ) : (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            {allHistorySales.map((sale, idx) => {
-              const uzs = parseFloat(sale.total_uzs || 0);
-              const usd = parseFloat(sale.total_usd || 0);
-              return (
-                <div
-                  key={sale.id}
-                  onClick={() => { setSelectedSaleId(sale.id); setShowDetailModal(true); }}
-                  className={`flex items-center gap-3 px-4 py-3 cursor-pointer active:bg-gray-50 hover:bg-gray-50 transition-colors ${idx < allHistorySales.length - 1 ? 'border-b border-gray-50' : ''}`}
-                >
-                  <div className="w-9 h-9 bg-blue-50 rounded-full flex items-center justify-center font-bold text-[#1447E6] text-sm shrink-0">
-                    {sale.customer_name?.charAt(0) || 'M'}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="text-xs font-semibold text-gray-900 truncate">{sale.customer_name}</p>
-                      {sale.is_overdue && <span className="text-[9px] font-bold text-red-500 bg-red-50 px-1.5 py-0.5 rounded-lg shrink-0">Muddati o'tgan</span>}
-                    </div>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <p className="text-[10px] text-gray-400">{new Date(sale.created_at).toLocaleDateString('uz-UZ')}</p>
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-lg bg-gray-100 text-gray-600">
-                        {sale.payment_method_display}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="text-right shrink-0">
-                    {uzs > 0 && <p className="text-xs font-bold text-[#1447E6]">{uzs.toLocaleString()} so'm</p>}
-                    {usd > 0 && <p className="text-xs font-bold text-emerald-600">${usd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>}
-                  </div>
+      {/* ── History Drawer ── */}
+      {showHistoryDrawer && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-end" onClick={() => setShowHistoryDrawer(false)}>
+          <div className="bg-[#F0F4FF] rounded-t-3xl w-full max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            {/* Drawer header */}
+            <div className="bg-white px-5 py-4 flex items-center justify-between border-b border-gray-100 rounded-t-3xl shrink-0">
+              <div>
+                <h2 className="text-base font-bold text-gray-900">Sotuvlar tarixi</h2>
+                {historyTotal > 0 && <p className="text-xs text-gray-400">{historyTotal} ta sotuv</p>}
+              </div>
+              <button onClick={() => setShowHistoryDrawer(false)} className="w-8 h-8 bg-gray-100 rounded-xl flex items-center justify-center text-gray-500 hover:bg-gray-200">
+                <FiX className="w-4 h-4" />
+              </button>
+            </div>
+            {/* Drawer body */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {historyLoading && allHistorySales.length === 0 ? (
+                <div className="flex justify-center py-12">
+                  <FiLoader className="w-6 h-6 text-[#1447E6] animate-spin" />
                 </div>
-              );
-            })}
+              ) : allHistorySales.length === 0 ? (
+                <div className="py-12 text-center">
+                  <p className="text-sm text-gray-400">Hali sotuv yo'q</p>
+                </div>
+              ) : (
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                  {allHistorySales.map((sale, idx) => {
+                    const uzs = parseFloat(sale.total_uzs || 0);
+                    const usd = parseFloat(sale.total_usd || 0);
+                    return (
+                      <div
+                        key={sale.id}
+                        onClick={() => { setSelectedSaleId(sale.id); setShowDetailModal(true); }}
+                        className={`flex items-center gap-3 px-4 py-3 cursor-pointer active:bg-gray-50 hover:bg-gray-50 transition-colors ${idx < allHistorySales.length - 1 ? 'border-b border-gray-50' : ''}`}
+                      >
+                        <div className="w-9 h-9 bg-blue-50 rounded-full flex items-center justify-center font-bold text-[#1447E6] text-sm shrink-0">
+                          {sale.customer_name?.charAt(0) || 'M'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="text-xs font-semibold text-gray-900 truncate">{sale.customer_name}</p>
+                            {sale.is_overdue && <span className="text-[9px] font-bold text-red-500 bg-red-50 px-1.5 py-0.5 rounded-lg shrink-0">Muddati o'tgan</span>}
+                          </div>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <p className="text-[10px] text-gray-400">{new Date(sale.created_at).toLocaleDateString('uz-UZ')}</p>
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-lg bg-gray-100 text-gray-600">{sale.payment_method_display}</span>
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          {usd > 0 && <p className="text-xs font-bold text-emerald-600">${usd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>}
+                          {uzs > 0 && <p className="text-xs font-bold text-[#1447E6]">{uzs.toLocaleString()} so'm</p>}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              {hasMoreHistory && (
+                <button
+                  onClick={() => setHistoryPage(p => p + 1)}
+                  disabled={historyFetching}
+                  className="w-full py-3 bg-white border border-gray-100 rounded-2xl text-sm font-semibold text-gray-600 hover:bg-gray-50 flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
+                >
+                  {historyFetching && <FiLoader className="animate-spin w-4 h-4" />}
+                  {historyFetching ? 'Yuklanmoqda...' : `Yana ko'rish (${historyTotal - allHistorySales.length} ta qoldi)`}
+                </button>
+              )}
+            </div>
           </div>
-        )}
-
-        {hasMoreHistory && (
-          <button
-            onClick={() => setHistoryPage(p => p + 1)}
-            disabled={historyFetching}
-            className="w-full py-3 bg-white border border-gray-100 rounded-2xl text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
-          >
-            {historyFetching ? <FiLoader className="animate-spin w-4 h-4" /> : null}
-            {historyFetching ? 'Yuklanmoqda...' : `Yana ko'rish (${historyTotal - allHistorySales.length} ta qoldi)`}
-          </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* ── Detail Modal ── */}
       {showDetailModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-end" onClick={() => setShowDetailModal(false)}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-end" onClick={() => setShowDetailModal(false)}>
           <div className="bg-white rounded-t-3xl w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="sticky top-0 bg-white border-b border-gray-100 px-5 py-4 flex items-center justify-between">
               <h2 className="text-base font-bold text-gray-900">Sotuv #{saleDetail?.id}</h2>
@@ -1051,7 +1078,7 @@ const Sales = () => {
 
       {/* ── Edit Sale Modal ── */}
       {showEditSaleModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-end" onClick={() => setShowEditSaleModal(false)}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] flex items-end" onClick={() => setShowEditSaleModal(false)}>
           <div className="bg-white rounded-t-3xl w-full" onClick={e => e.stopPropagation()}>
             <div className="px-5 pt-5 pb-2 flex items-center justify-between border-b border-gray-100">
               <h2 className="text-base font-bold text-gray-900">Sotuvni tahrirlash</h2>
@@ -1091,7 +1118,7 @@ const Sales = () => {
                   try {
                     await updateSaleMutation.mutateAsync({ id: selectedSaleId, data: editSaleData });
                     setShowEditSaleModal(false);
-                  } catch {}
+                  } catch { }
                 }}
                 disabled={updateSaleMutation.isPending}
                 className="w-full py-4 bg-[#1447E6] text-white rounded-2xl font-bold text-sm disabled:opacity-50 flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors">
@@ -1105,7 +1132,7 @@ const Sales = () => {
 
       {/* ── Delete Confirm ── */}
       {showDeleteSaleModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center px-4" onClick={() => setShowDeleteSaleModal(false)}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] flex items-center justify-center px-4" onClick={() => setShowDeleteSaleModal(false)}>
           <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl" onClick={e => e.stopPropagation()}>
             <div className="text-center mb-5">
               <div className="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
@@ -1122,7 +1149,7 @@ const Sales = () => {
                     await deleteSaleMutation.mutateAsync(selectedSaleId);
                     setShowDeleteSaleModal(false);
                     setSelectedSaleId(null);
-                  } catch {}
+                  } catch { }
                 }}
                 disabled={deleteSaleMutation.isPending}
                 className="flex-1 py-3 bg-red-500 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50 hover:bg-red-600">
@@ -1143,7 +1170,7 @@ const Sales = () => {
                 const newCustomer = await createCustomerMutation.mutateAsync(data);
                 setSelectedCustomer(newCustomer || null);
                 setIsAddCustomerModalOpen(false);
-              } catch (error) {}
+              } catch (error) { }
             }}
             isPending={createCustomerMutation.isPending}
           />

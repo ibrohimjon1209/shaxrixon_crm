@@ -142,6 +142,7 @@ const Warehouse = () => {
   useEffect(() => { setPage(1); }, [searchTerm]);
 
   const { data: productsData, isLoading: productsLoading } = useProducts({ search: searchTerm, page, ordering: 'quantity' });
+  const { data: allPagesData } = useProducts({ ordering: 'quantity', page: 1 });
   const { data: categoriesData, isLoading: categoriesLoading } = useCategories();
   const { data: lowStockData } = useLowStockProducts();
   const { data: singleProduct, isLoading: productLoading } = useProduct(selectedProduct?.id);
@@ -175,16 +176,28 @@ const Warehouse = () => {
   const lowStockRaw = lowStockData?.results || lowStockData || [];
   const lowStockCount = Array.isArray(lowStockRaw) ? lowStockRaw.length : 0;
 
-  // Kategoriya statistikasi to'g'ridan-to'g'ri /api/products/categories/ dan keladi
+  // Haqiqiy mahsulotlardan hisoblash (backend totallari noto'g'ri bo'lishi mumkin)
+  const allRealProducts = allPagesData?.results || [];
+  const realAgg = {};
+  allRealProducts.forEach((p) => {
+    const cid = p.category;
+    if (!cid) return;
+    if (!realAgg[cid]) realAgg[cid] = { saleUzs: 0, saleUsd: 0, costUzs: 0, costUsd: 0 };
+    const qty = parseInt(p.quantity) || 0;
+    const isUsd = (p.currency || 'uzs').toLowerCase() === 'usd';
+    realAgg[cid][isUsd ? 'saleUsd' : 'saleUzs'] += parseFloat(p.sale_price || 0) * qty;
+    realAgg[cid][isUsd ? 'costUsd' : 'costUzs'] += parseFloat(p.cost_price || 0) * qty;
+  });
+
   const categoryStats = categories.map((c) => ({
     id: c.id,
     name: c.name,
     count: c.product_count ?? 0,
     quantity: parseInt(c.total_quantity) || 0,
-    saleUzs: parseFloat(c.total_sale_price_uzs) || 0,
-    saleUsd: parseFloat(c.total_sale_price_usd) || 0,
-    costUzs: parseFloat(c.total_cost_price_uzs) || 0,
-    costUsd: parseFloat(c.total_cost_price_usd) || 0,
+    saleUzs: realAgg[c.id] ? realAgg[c.id].saleUzs : (parseFloat(c.total_sale_price_uzs) || 0),
+    saleUsd: realAgg[c.id] ? realAgg[c.id].saleUsd : (parseFloat(c.total_sale_price_usd) || 0),
+    costUzs: realAgg[c.id] ? realAgg[c.id].costUzs : (parseFloat(c.total_cost_price_uzs) || 0),
+    costUsd: realAgg[c.id] ? realAgg[c.id].costUsd : (parseFloat(c.total_cost_price_usd) || 0),
     lowStock: 0,
   })).sort((a, b) => a.quantity - b.quantity);
 
@@ -199,6 +212,16 @@ const Warehouse = () => {
   const { data: catProductsData, isLoading: catProductsLoading } = useProducts(
     selectedCategory ? { category: selectedCategory.id, ordering: 'quantity' } : {}
   );
+
+  // Haqiqiy mahsulotlar ma'lumotidan hisoblash (backend totallari noto'g'ri bo'lishi mumkin)
+  const catProducts = catProductsData?.results || [];
+  const catSaleUzs = catProducts.reduce((s, p) => (p.currency || 'uzs').toLowerCase() === 'uzs' ? s + parseFloat(p.sale_price || 0) * (parseInt(p.quantity) || 0) : s, 0);
+  const catSaleUsd = catProducts.reduce((s, p) => (p.currency || 'uzs').toLowerCase() === 'usd' ? s + parseFloat(p.sale_price || 0) * (parseInt(p.quantity) || 0) : s, 0);
+  // cost_price list endpointida bo'lmasligi mumkin — backend kategoriya totallari to'g'ri
+  const computedCostUzs = catProducts.reduce((s, p) => (p.currency || 'uzs').toLowerCase() === 'uzs' ? s + parseFloat(p.cost_price || 0) * (parseInt(p.quantity) || 0) : s, 0);
+  const computedCostUsd = catProducts.reduce((s, p) => (p.currency || 'uzs').toLowerCase() === 'usd' ? s + parseFloat(p.cost_price || 0) * (parseInt(p.quantity) || 0) : s, 0);
+  const catCostUzs = computedCostUzs > 0 ? computedCostUzs : (selectedCategory?.costUzs || 0);
+  const catCostUsd = computedCostUsd > 0 ? computedCostUsd : (selectedCategory?.costUsd || 0);
 
   const getStatusCfg = (status) => statusConfig[status] || statusConfig.good;
 
@@ -316,13 +339,13 @@ const Warehouse = () => {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowCategoryModal(true)}
-                className="px-3 py-2 bg-gray-100 text-gray-700 rounded-xl text-xs font-semibold hover:bg-gray-200 transition-colors"
+                className="px-3 py-5 bg-gray-100 text-gray-700 rounded-xl text-xs font-semibold hover:bg-gray-200 transition-colors"
               >
                 Kategoriyalar
               </button>
               <button
                 onClick={() => setShowAddModal(true)}
-                className="px-3 py-2 bg-[#1447E6] text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm"
+                className="px-3 py-5 bg-[#1447E6] text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm"
               >
                 <FiPlus className="w-3.5 h-3.5" />
                 Qo'shish
@@ -596,15 +619,15 @@ const Warehouse = () => {
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <p className="text-[10px] font-bold text-[#1447E6] uppercase tracking-wider mb-1.5">Sotuv summasi</p>
-                      {selectedCategory.saleUzs > 0 && <p className="text-sm font-black text-[#1447E6]">{selectedCategory.saleUzs.toLocaleString()} so'm</p>}
-                      {selectedCategory.saleUsd > 0 && <p className="text-sm font-black text-emerald-600">${selectedCategory.saleUsd.toLocaleString()}</p>}
-                      {!selectedCategory.saleUzs && !selectedCategory.saleUsd && <p className="text-sm font-black text-gray-300">—</p>}
+                      {catSaleUsd > 0 && <p className="text-sm font-black text-emerald-600">${catSaleUsd.toLocaleString()}</p>}
+                      {catSaleUzs > 0 && <p className="text-sm font-black text-[#1447E6]">{catSaleUzs.toLocaleString()} so'm</p>}
+                      {!catSaleUzs && !catSaleUsd && <p className="text-sm font-black text-gray-300">—</p>}
                     </div>
                     <div>
                       <p className="text-[10px] font-bold text-orange-500 uppercase tracking-wider mb-1.5">Tan narx summasi</p>
-                      {selectedCategory.costUzs > 0 && <p className="text-sm font-black text-orange-600">{selectedCategory.costUzs.toLocaleString()} so'm</p>}
-                      {selectedCategory.costUsd > 0 && <p className="text-sm font-black text-orange-500">${selectedCategory.costUsd.toLocaleString()}</p>}
-                      {!selectedCategory.costUzs && !selectedCategory.costUsd && <p className="text-sm font-black text-gray-300">—</p>}
+                      {catCostUsd > 0 && <p className="text-sm font-black text-orange-500">${catCostUsd.toLocaleString()}</p>}
+                      {catCostUzs > 0 && <p className="text-sm font-black text-orange-600">{catCostUzs.toLocaleString()} so'm</p>}
+                      {!catCostUzs && !catCostUsd && <p className="text-sm font-black text-gray-300">—</p>}
                     </div>
                   </div>
                 </div>
@@ -648,19 +671,25 @@ const Warehouse = () => {
               <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
                 {/* Grand total */}
                 <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Jami ombor summasi</p>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <p className="text-[10px] font-bold text-[#1447E6] mb-1">Sotuv</p>
-                      {categoryTotals.saleUzs > 0 && <p className="text-base font-black text-[#1447E6]">{categoryTotals.saleUzs.toLocaleString()} so'm</p>}
-                      {categoryTotals.saleUsd > 0 && <p className="text-base font-black text-emerald-600">${categoryTotals.saleUsd.toLocaleString()}</p>}
-                      {!categoryTotals.saleUzs && !categoryTotals.saleUsd && <p className="text-base font-black text-gray-300">—</p>}
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-3">Jami ombor summasi</p>
+                  <div className="space-y-2">
+                    {/* Sotuv row */}
+                    <div className="flex items-center justify-between">
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Sotuv</p>
+                      <div className="flex items-center gap-3">
+                        {categoryTotals.saleUsd > 0 && <p className="text-base font-black text-emerald-600">${categoryTotals.saleUsd.toLocaleString()}</p>}
+                        {categoryTotals.saleUzs > 0 && <p className="text-sm font-bold text-[#1447E6]">{categoryTotals.saleUzs.toLocaleString()} so'm</p>}
+                        {!categoryTotals.saleUzs && !categoryTotals.saleUsd && <p className="text-base font-black text-gray-300">—</p>}
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-[10px] font-bold text-orange-500 mb-1">Tan narx</p>
-                      {categoryTotals.costUzs > 0 && <p className="text-base font-black text-orange-600">{categoryTotals.costUzs.toLocaleString()} so'm</p>}
-                      {categoryTotals.costUsd > 0 && <p className="text-base font-black text-orange-500">${categoryTotals.costUsd.toLocaleString()}</p>}
-                      {!categoryTotals.costUzs && !categoryTotals.costUsd && <p className="text-base font-black text-gray-300">—</p>}
+                    {/* Tan narx row */}
+                    <div className="flex items-center justify-between">
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Tan narx</p>
+                      <div className="flex items-center gap-3">
+                        {categoryTotals.costUsd > 0 && <p className="text-base font-black text-orange-500">${categoryTotals.costUsd.toLocaleString()}</p>}
+                        {categoryTotals.costUzs > 0 && <p className="text-sm font-bold text-orange-600">{categoryTotals.costUzs.toLocaleString()} so'm</p>}
+                        {!categoryTotals.costUzs && !categoryTotals.costUsd && <p className="text-base font-black text-gray-300">—</p>}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -685,8 +714,8 @@ const Warehouse = () => {
                         <p className="text-sm font-bold text-gray-900 truncate">{cat.name}</p>
                         <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                           <span className="text-[10px] font-semibold text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded-lg">{cat.count} ta</span>
-                          {cat.saleUzs > 0 && <span className="text-[10px] font-bold text-[#1447E6]">{cat.saleUzs.toLocaleString()} so'm</span>}
                           {cat.saleUsd > 0 && <span className="text-[10px] font-bold text-emerald-600">${cat.saleUsd.toLocaleString()}</span>}
+                          {cat.saleUzs > 0 && <span className="text-[10px] font-bold text-[#1447E6]">{cat.saleUzs.toLocaleString()} so'm</span>}
                           {cat.lowStock > 0 && (
                             <span className="text-[10px] font-bold text-red-500 bg-red-50 px-1.5 py-0.5 rounded-lg flex items-center gap-1">
                               <FiAlertCircle className="w-2.5 h-2.5" /> {cat.lowStock}

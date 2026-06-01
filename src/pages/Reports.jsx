@@ -150,41 +150,31 @@ const Reports = () => {
             {/* Stat cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <StatCard
-                icon={FiDollarSign} bg="bg-blue-50" color="text-[#1447E6]"
-                title="Tushum (so'm)"
-                value={`${fmt(revUZS)} so'm`}
-                sub={dashPeriod}
-                loading={dashLoading}
-              />
-              <StatCard
                 icon={FiDollarSign} bg="bg-emerald-50" color="text-emerald-600"
                 title="Tushum ($)"
                 value={`$${fmt(revUSD)}`}
-                sub={dashPeriod}
+                sub={`${fmt(revUZS)} so'm`}
                 loading={dashLoading}
               />
               <StatCard
                 icon={FiTrendingUp} bg="bg-teal-50" color="text-teal-600"
                 title="Sof Foyda"
-                value={`${fmt(profUZS)} so'm`}
-                valueUSD={profUSD}
-                sub={dashPeriod}
+                value={`$${fmt(profUSD)}`}
+                sub={`${fmt(profUZS)} so'm`}
                 loading={dashLoading}
               />
               <StatCard
                 icon={FiCreditCard} bg="bg-amber-50" color="text-amber-600"
                 title="Xarajat"
-                value={`${fmt(costUZS)} so'm`}
-                valueUSD={costUSD}
-                sub={dashPeriod}
+                value={`$${fmt(costUSD)}`}
+                sub={`${fmt(costUZS)} so'm`}
                 loading={dashLoading}
               />
               <StatCard
                 icon={FiTruck} bg="bg-indigo-50" color="text-indigo-600"
                 title="Xarid jami"
-                value={`${fmt(purchaseUZS)} so'm`}
-                valueUSD={purchaseUSD}
-                sub={`${purchasesCount} ta xarid`}
+                value={`$${fmt(purchaseUSD)}`}
+                sub={`${fmt(purchaseUZS)} so'm | ${purchasesCount} ta`}
                 loading={dashLoading}
               />
               <StatCard
@@ -195,17 +185,10 @@ const Reports = () => {
                 loading={dashLoading}
               />
               <StatCard
-                icon={FiCreditCard} bg="bg-orange-50" color="text-orange-600"
-                title="Qarz (so'm)"
-                value={`${fmt(debtUZS)} so'm`}
-                sub={`${debtors.length} ta qarzdor`}
-                loading={dashLoading}
-              />
-              <StatCard
                 icon={FiCreditCard} bg="bg-red-50" color="text-red-500"
-                title="Qarz ($)"
+                title="Qarz"
                 value={`$${fmt(debtUSD)}`}
-                sub={`${debtors.length} ta qarzdor`}
+                sub={`${fmt(debtUZS)} so'm | ${debtors.length} ta`}
                 loading={dashLoading}
               />
             </div>
@@ -235,8 +218,8 @@ const Reports = () => {
                 <h3 className="text-sm font-bold text-gray-900 mb-4">Tushum, xarajat va foyda</h3>
                 <div className="space-y-3">
                   {[
-                    { label: 'Tushum (so\'m)', val: revUZS,  color: 'bg-[#1447E6]',   text: 'text-[#1447E6]',   max: revUZS  },
                     { label: 'Tushum ($)',      val: revUSD,  color: 'bg-emerald-500', text: 'text-emerald-600', max: revUSD  },
+                    { label: 'Tushum (so\'m)', val: revUZS,  color: 'bg-[#1447E6]',   text: 'text-[#1447E6]',   max: revUZS  },
                     { label: 'Xarajat (so\'m)', val: costUZS, color: 'bg-amber-500',   text: 'text-amber-600',   max: revUZS  },
                     { label: 'Xarid (so\'m)',   val: purchaseUZS, color: 'bg-indigo-500', text: 'text-indigo-600', max: Math.max(revUZS, purchaseUZS) },
                     { label: 'Foyda (so\'m)',   val: profUZS, color: 'bg-teal-500',    text: 'text-teal-600',    max: revUZS  },
@@ -312,8 +295,8 @@ const Reports = () => {
                         <p className="text-[10px] text-gray-400">{c.orders} ta buyurtma</p>
                       </div>
                       <div className="text-right shrink-0">
-                        {parseFloat(c.spent_uzs || 0) > 0 && <p className="text-xs font-black text-[#1447E6]">{fmt(c.spent_uzs)} so'm</p>}
                         {parseFloat(c.spent_usd || 0) > 0 && <p className="text-xs font-black text-emerald-600">${fmt(c.spent_usd)}</p>}
+                        {parseFloat(c.spent_uzs || 0) > 0 && <p className="text-xs font-black text-[#1447E6]">{fmt(c.spent_uzs)} so'm</p>}
                       </div>
                     </div>
                   ))}
@@ -344,8 +327,8 @@ const Reports = () => {
                         <p className="text-xs font-semibold text-gray-800">{c.name}</p>
                       </div>
                       <div className="text-right">
+                        {parseFloat(c.debt_usd || 0) > 0 && <span className="text-xs font-black text-red-500 block">${fmt(c.debt_usd)}</span>}
                         {parseFloat(c.debt_uzs || 0) > 0 && <span className="text-xs font-black text-red-500 block">{fmt(c.debt_uzs)} so'm</span>}
-                        {parseFloat(c.debt_usd || 0) > 0 && <span className="text-xs font-black text-red-500 block">{fmt(c.debt_usd)} $</span>}
                       </div>
                     </div>
                   ))}
@@ -389,12 +372,12 @@ const Reports = () => {
                   ].map((item, i) => (
                     <div key={i} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
                       <p className={`text-[9px] font-bold uppercase tracking-wider mb-1 ${item.color}`}>{item.label}</p>
-                      <p className={`text-base font-black ${item.color} leading-tight`}>{fmt(item.uzs)} so'm</p>
                       {parseFloat(item.usd) !== 0 && (
-                        <p className={`text-sm font-bold ${parseFloat(item.usd) < 0 ? 'text-red-500' : 'text-emerald-600'}`}>
+                        <p className={`text-base font-black leading-tight ${parseFloat(item.usd) < 0 ? 'text-red-500' : 'text-emerald-600'}`}>
                           ${fmt(item.usd)}
                         </p>
                       )}
+                      <p className={`text-sm font-bold ${item.color}`}>{fmt(item.uzs)} so'm</p>
                     </div>
                   ))}
                 </div>
@@ -408,8 +391,8 @@ const Reports = () => {
                         <div key={i} className="flex items-center justify-between py-2.5 border-b border-gray-50 last:border-0">
                           <span className="text-xs font-semibold text-gray-500">{row.month || row.date || row.period}</span>
                           <div className="text-right space-y-0.5">
-                            {parseFloat(row.revenue_uzs || 0) !== 0 && <p className="text-xs font-bold text-[#1447E6]">{fmt(row.revenue_uzs)} so'm</p>}
                             {parseFloat(row.revenue_usd || 0) !== 0 && <p className="text-xs font-bold text-emerald-600">${fmt(row.revenue_usd)}</p>}
+                            {parseFloat(row.revenue_uzs || 0) !== 0 && <p className="text-xs font-bold text-[#1447E6]">{fmt(row.revenue_uzs)} so'm</p>}
                             <p className="text-[10px] text-gray-400 font-semibold">{row.count} ta sotuv</p>
                           </div>
                         </div>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  FiPlus, FiSearch, FiPackage, FiTruck, FiX, FiCheck,
+  FiPlus, FiMinus, FiSearch, FiPackage, FiTruck, FiX, FiCheck,
   FiLoader, FiTrash2, FiEdit
 } from 'react-icons/fi';
 import { useQueries } from '@tanstack/react-query';
@@ -293,45 +293,54 @@ const Purchases = () => {
 
                 {/* Cart */}
                 {cart.length > 0 && (
-                  <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-                    <h3 className="text-sm font-bold text-gray-900 mb-3">Tanlangan mahsulotlar</h3>
-                    <div className="space-y-2">
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div className="flex items-center justify-between px-4 pt-4 pb-2">
+                      <h3 className="text-sm font-bold text-gray-900">Tanlangan mahsulotlar</h3>
+                      <span className="bg-blue-50 text-[#1447E6] px-2.5 py-1 rounded-xl text-xs font-bold">{cart.length} ta</span>
+                    </div>
+                    <div className="divide-y divide-gray-50">
                       {cart.map(item => (
-                        <div key={item.id} className="bg-gray-50 rounded-xl p-3 space-y-2">
-                          {/* Name row */}
-                          <div className="flex items-center justify-between">
-                            <p className="font-bold text-gray-900 text-sm truncate flex-1 mr-2">{item.name}</p>
+                        <div key={item.id} className="px-4 py-3">
+                          {/* Name + price + delete */}
+                          <div className="flex items-center justify-between mb-2.5">
+                            <div className="flex-1 min-w-0 pr-3">
+                              <p className="font-bold text-gray-900 text-sm truncate">{item.name}</p>
+                              <p className={`text-xs font-bold ${item.currency === 'usd' ? 'text-emerald-600' : 'text-[#1447E6]'}`}>
+                                {item.currency === 'usd' ? `$${fmt(item.costPrice)}` : `${fmt(item.costPrice)} so'm`}
+                              </p>
+                            </div>
                             <button
                               onClick={() => removeFromCart(item.id)}
-                              className="w-6 h-6 flex items-center justify-center text-gray-300 hover:text-red-400 shrink-0 transition-colors"
+                              className="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-red-400 active:scale-90 transition-all shrink-0"
                             >
-                              <FiX className="w-3.5 h-3.5" />
+                              <FiX className="w-4 h-4" />
                             </button>
                           </div>
-                          {/* Controls row */}
+                          {/* Big +/- quantity */}
                           <div className="flex items-center gap-2">
-                            {/* Quantity input */}
-                            <div className="shrink-0 flex flex-col items-center gap-0.5">
-                              <span className="text-[9px] text-gray-400 font-semibold">Soni</span>
-                              <input
-                                type="number"
-                                min="1"
-                                value={item.quantity}
-                                onChange={(e) => setCart(cart.map(c => c.id === item.id ? { ...c, quantity: e.target.value } : c))}
-                                onBlur={(e) => {
-                                  const val = parseInt(e.target.value) || 1;
-                                  setCart(cart.map(c => c.id === item.id ? { ...c, quantity: val } : c));
-                                }}
-                                className="w-14 px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-sm font-black text-center focus:ring-2 focus:ring-[#1447E6]/20 focus:border-[#1447E6] outline-none"
-                              />
-                            </div>
-                            {/* Product cost price */}
-                            <div className="flex-1 flex flex-col gap-0.5">
-                              <span className="text-[9px] text-gray-400 font-semibold">Tan narx</span>
-                              <div className={`px-3 py-1.5 bg-white border rounded-lg text-xs font-black ${item.currency === 'usd' ? 'border-emerald-100 text-emerald-600' : 'border-gray-200 text-[#1447E6]'}`}>
-                                {item.currency === 'usd' ? `$${fmt(item.costPrice)}` : `${fmt(item.costPrice)} so'm`}
-                              </div>
-                            </div>
+                            <button
+                              onClick={() => setCart(cart.map(c => c.id === item.id ? { ...c, quantity: Math.max(1, (parseInt(c.quantity) || 1) - 1) } : c))}
+                              className="w-11 h-11 rounded-2xl bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-red-50 hover:text-red-500 active:scale-90 transition-all"
+                            >
+                              <FiMinus className="w-5 h-5" />
+                            </button>
+                            <input
+                              type="number"
+                              min="1"
+                              value={item.quantity}
+                              onChange={(e) => setCart(cart.map(c => c.id === item.id ? { ...c, quantity: e.target.value } : c))}
+                              onBlur={(e) => {
+                                const val = parseInt(e.target.value) || 1;
+                                setCart(cart.map(c => c.id === item.id ? { ...c, quantity: val } : c));
+                              }}
+                              className="flex-1 h-11 text-center font-black text-gray-900 text-lg bg-gray-50 rounded-2xl outline-none border border-gray-100 focus:border-[#1447E6]"
+                            />
+                            <button
+                              onClick={() => setCart(cart.map(c => c.id === item.id ? { ...c, quantity: (parseInt(c.quantity) || 1) + 1 } : c))}
+                              className="w-11 h-11 rounded-2xl bg-[#1447E6] flex items-center justify-center text-white hover:bg-blue-700 active:scale-90 transition-all"
+                            >
+                              <FiPlus className="w-5 h-5" />
+                            </button>
                           </div>
                         </div>
                       ))}
