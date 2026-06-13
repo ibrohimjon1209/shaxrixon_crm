@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://apibcrm.nsdcorporation.uz';
+const API_URL = import.meta.env.VITE_API_URL || 'https://apidemobcrm.nsdcorporation.uz';
 
 const api = axios.create({
   baseURL: API_URL,
