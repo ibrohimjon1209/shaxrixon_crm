@@ -1,31 +1,25 @@
 import { useState } from 'react';
 import {
   Plus, Minus, MagnifyingGlass, Package, Truck, X, Check,
-  Spinner, Trash, Pencil
+  Spinner, Trash, PencilSimple, CaretRight
 } from '@phosphor-icons/react';
-import { useQueries } from '@tanstack/react-query';
 import { usePurchases, usePurchaseDetail, useCreatePurchase, useUpdatePurchase, useDeletePurchase } from '../hooks/usePurchases';
-import purchaseService from '../services/purchase.service';
 import { useProducts } from '../hooks/useProducts';
 import { toast } from 'react-toastify';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const fmt = (num) => parseFloat(num || 0).toLocaleString('uz-UZ');
-
-const getProductCurrency = (product) => (product?.currency || 'uzs').toLowerCase();
-
-const getProductCostPrice = (product) => {
-  const cost = parseFloat(product?.cost_price || 0);
-  if (cost > 0) return cost;
-  return parseFloat(product?.sale_price || 0);
+const modalVariants = {
+  hidden: { opacity: 0, scale: 0.95, y: 15 },
+  visible: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.15, ease: 'easeOut' } },
+  exit: { opacity: 0, scale: 0.95, y: 15, transition: { duration: 0.15, ease: 'easeIn' } }
+};
+const backdropVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.15 } },
+  exit: { opacity: 0, transition: { duration: 0.15 } }
 };
 
-const paymentMethods = [
-  { id: 'cash', label: 'Naqd' },
-  { id: 'card', label: 'Karta' },
-  { id: 'debt', label: 'Nasiya' },
-  { id: 'transfer', label: "O'tkazma" },
-];
+const fmt = (num) => parseFloat(num || 0).toLocaleString('uz-UZ');
 
 const Purchases = () => {
   const [viewPurchase, setViewPurchase] = useState(null);
@@ -35,7 +29,10 @@ const Purchases = () => {
   const [cart, setCart] = useState([]);
   const [productSearch, setProductSearch] = useState('');
   const [note, setNote] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('cash');
+
+  // Variant selection (same pattern as Sotuv)
+  const [showVariantModal, setShowVariantModal] = useState(false);
+  const [selectedProductForVariants, setSelectedProductForVariants] = useState(null);
 
   const { data: purchasesData, isLoading: purchasesLoading } = usePurchases();
   const { data: purchaseDetail, isLoading: detailLoading } = usePurchaseDetail(viewPurchase?.id);
@@ -48,48 +45,47 @@ const Purchases = () => {
   const purchases = purchasesData?.results || [];
   const products = productsData?.results || [];
 
-  const purchaseDetails = useQueries({
-    queries: purchases.map(p => ({
-      queryKey: ['purchase-detail', p.id],
-      queryFn: () => purchaseService.getPurchase(p.id),
-      staleTime: 5 * 60 * 1000,
-    }))
-  });
-
-  const getItemsCount = (purchaseId) => {
-    const idx = purchases.findIndex(p => p.id === purchaseId);
-    const detail = purchaseDetails[idx]?.data;
-    return detail?.items?.reduce((s, i) => s + (i.quantity || 0), 0) ?? null;
-  };
-
   const filteredPurchases = searchTerm
     ? purchases.filter(p => p.id?.toString().includes(searchTerm))
     : purchases;
 
-  const addToCart = (item) => {
-    const costPrice = parseFloat(item.cost_price || 0) > 0 ? parseFloat(item.cost_price || 0) : parseFloat(item.sale_price || 0);
-    const currency = (item.currency || 'uzs').toLowerCase();
-    
-    const cartId = item.isVariant ? `v-${item.id}` : `p-${item.id}`;
-    const existing = cart.find(c => c.cartId === cartId);
-    
+  const handleProductClick = (product) => {
+    if (product.has_variants && product.variants?.length > 0) {
+      setSelectedProductForVariants(product);
+      setShowVariantModal(true);
+    } else {
+      addToCart(product, null);
+    }
+  };
+
+  const addToCart = (product, variant = null) => {
+    const cartId = variant ? `v-${variant.id}` : `p-${product.id}`;
+    const existing = cart.find(item => item.cartId === cartId);
+
     if (existing) {
-      setCart(cart.map(c =>
-        c.cartId === cartId ? { ...c, quantity: (parseInt(c.quantity) || 0) + 1, costPrice, currency } : c
+      setCart(cart.map(item =>
+        item.cartId === cartId ? { ...item, quantity: (parseInt(item.quantity, 10) || 0) + 1 } : item
       ));
     } else {
+      const isUzs = variant
+        ? (variant.currency || 'uzs').toLowerCase() === 'uzs'
+        : (product.currency || 'uzs').toLowerCase() === 'uzs';
+      const rawCost = variant ? variant.cost_price : product.cost_price;
+      const rawSale = variant ? variant.sale_price : product.sale_price;
+      const costPrice = parseFloat(rawCost || 0) > 0 ? parseFloat(rawCost) : parseFloat(rawSale || 0);
       setCart([...cart, {
         cartId,
-        productId: item.productId,
-        variantId: item.isVariant ? item.id : null,
-        productName: item.productName,
-        variantName: item.isVariant ? item.name : null,
-        name: item.isVariant ? `${item.productName} (${item.name})` : item.productName,
+        productId: product.id,
+        variantId: variant ? variant.id : null,
+        productName: product.name,
+        variantName: variant ? variant.name : null,
+        name: variant ? `${product.name} (${variant.name})` : product.name,
         quantity: 1,
         costPrice,
-        currency
+        currency: isUzs ? 'uzs' : 'usd',
       }]);
     }
+    if (variant) setShowVariantModal(false);
   };
 
   const removeFromCart = (cartId) => {
@@ -99,7 +95,6 @@ const Purchases = () => {
   const openCreateModal = () => {
     setCart([]);
     setNote('');
-    setPaymentMethod('cash');
     setEditPurchaseId(null);
     setModalMode('create');
   };
@@ -119,7 +114,6 @@ const Purchases = () => {
       }))
     );
     setNote(purchase.note || '');
-    setPaymentMethod(purchase.payment_method || 'cash');
     setEditPurchaseId(purchase.id);
     setModalMode('edit');
   };
@@ -130,46 +124,28 @@ const Purchases = () => {
       return;
     }
     try {
-      if (modalMode === 'create') {
-        const total_uzs = cart.reduce((sum, item) => item.currency === 'uzs' ? sum + (item.quantity * item.costPrice) : sum, 0);
-        const total_usd = cart.reduce((sum, item) => item.currency === 'usd' ? sum + (item.quantity * item.costPrice) : sum, 0);
+      const total_uzs = cart.reduce((sum, item) => item.currency === 'uzs' ? sum + (item.quantity * item.costPrice) : sum, 0);
+      const total_usd = cart.reduce((sum, item) => item.currency === 'usd' ? sum + (item.quantity * item.costPrice) : sum, 0);
+      const data = {
+        items: cart.map(item => ({
+          product: item.productId,
+          ...(item.variantId ? { variant: item.variantId } : {}),
+          quantity: parseInt(item.quantity, 10) || 1,
+          cost_price: parseFloat(item.costPrice || 0).toFixed(2),
+          currency: item.currency || 'uzs'
+        })),
+        total_uzs: total_uzs.toFixed(2),
+        total_usd: total_usd.toFixed(2),
+        note
+      };
 
-        await createPurchaseMutation.mutateAsync({
-          items: cart.map(item => ({
-            product: item.productId,
-            ...(item.variantId ? { variant: item.variantId } : {}),
-            quantity: parseInt(item.quantity) || 1,
-            cost_price: parseFloat(item.costPrice || 0).toFixed(2),
-            currency: item.currency || 'uzs'
-          })),
-          total_uzs: total_uzs.toFixed(2),
-          total_usd: total_usd.toFixed(2),
-          payment_method: paymentMethod,
-          note
-        });
+      if (modalMode === 'create') {
+        await createPurchaseMutation.mutateAsync(data);
       } else {
-        // include items and totals when updating a purchase
-        const total_uzs = cart.reduce((sum, item) => item.currency === 'uzs' ? sum + (item.quantity * item.costPrice) : sum, 0);
-        const total_usd = cart.reduce((sum, item) => item.currency === 'usd' ? sum + (item.quantity * item.costPrice) : sum, 0);
-        await updatePurchaseMutation.mutateAsync({
-          id: editPurchaseId,
-          data: {
-            items: cart.map(item => ({
-              product: item.productId,
-              ...(item.variantId ? { variant: item.variantId } : {}),
-              quantity: parseInt(item.quantity) || 1,
-              cost_price: parseFloat(item.costPrice || 0).toFixed(2),
-              currency: item.currency || 'uzs'
-            })),
-            total_uzs: total_uzs.toFixed(2),
-            total_usd: total_usd.toFixed(2),
-            payment_method: paymentMethod,
-            note
-          }
-        });
+        await updatePurchaseMutation.mutateAsync({ id: editPurchaseId, data });
       }
       setModalMode(null);
-    } catch (_) {}
+    } catch { }
   };
 
   const isPending = createPurchaseMutation.isPending || updatePurchaseMutation.isPending;
@@ -201,7 +177,7 @@ const Purchases = () => {
           />
         </div>
 
-        {/* Purchase list */}
+        {/* Purchase list (tarix) */}
         {purchasesLoading ? (
           <div className="flex justify-center py-20">
             <Spinner className="w-10 h-10 text-[#6366f1] animate-spin" />
@@ -222,23 +198,18 @@ const Purchases = () => {
                     <h3 className="font-bold text-slate-900 text-sm truncate max-w-[160px]">
                       {purchase.note ? purchase.note : `Xarid #${purchase.id}`}
                     </h3>
-                    <p className="text-[10px] text-slate-400 mt-0.5 flex items-center gap-1.5">
-                      {new Date(purchase.created_at).toLocaleDateString()}
-                      <span>•</span>
-                      {getItemsCount(purchase.id) ?? '...'} ta
-                      <span>•</span>
-                      <span className="font-semibold text-slate-600">{purchase.payment_method_display || paymentMethods.find(p => p.id === purchase.payment_method)?.label || purchase.payment_method}</span>
+                    <p className="text-[10px] text-slate-400 mt-0.5">
+                      {new Date(purchase.created_at).toLocaleDateString()} • {purchase.item_count ?? 0} ta mahsulot
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-
                   <div className="flex flex-col gap-1">
                     <button
                       onClick={(e) => { e.stopPropagation(); openEditModal(purchase); }}
                       className="w-8 h-8 bg-slate-50 text-indigo-500 rounded-lg flex items-center justify-center hover:bg-indigo-500 hover:text-white transition-all"
                     >
-                      <Pencil className="w-3.5 h-3.5" />
+                      <PencilSimple className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={(e) => {
@@ -302,58 +273,67 @@ const Purchases = () => {
               </div>
 
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {modalMode === 'create' && (
-                  <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
-                    <div className="flex items-center justify-between mb-3">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Mahsulot qo'shish</label>
-                      <div className="relative w-40">
-                        <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-3.5 h-3.5" />
-                        <input
-                          type="text"
-                          placeholder="Qidirish..."
-                          value={productSearch}
-                          onChange={e => setProductSearch(e.target.value)}
-                          className="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-100 rounded-xl text-xs focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1] outline-none"
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2.5 max-h-[320px] overflow-y-auto pr-1">
-                      {products.flatMap(p => {
-                        const items = p.variants?.length > 0 
-                          ? p.variants.map(v => ({ ...v, productId: p.id, productName: p.name, isVariant: true }))
-                          : [{ ...p, productId: p.id, productName: p.name, isVariant: false }];
-                        
-                        return items.map(item => {
-                          const currency = (item.currency || 'uzs').toLowerCase();
-                          const costPrice = parseFloat(item.cost_price || 0) > 0 ? parseFloat(item.cost_price || 0) : parseFloat(item.sale_price || 0);
-                          return (
-                            <button
-                              key={item.isVariant ? `v-${item.id}` : `p-${item.id}`}
-                              onClick={() => addToCart(item)}
-                              className="group cursor-pointer bg-white rounded-2xl p-3 border border-slate-100 hover:border-[#6366f1] hover:shadow-md active:scale-95 transition-all text-left"
-                            >
-                              <div className="flex items-start justify-between mb-2">
-                                <div className="w-8 h-8 bg-slate-50 rounded-xl flex items-center justify-center">
-                                  <Package className="w-4 h-4 text-[#6366f1]" />
-                                </div>
-                                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-lg ${(item.quantity || 0) <= 0 ? 'bg-red-50 text-red-500' : 'bg-emerald-50 text-emerald-600'}`}>
-                                  {(item.quantity || 0) <= 0 ? "Yo'q" : `${item.quantity || 0} ${item.unit || 'dona'}`}
-                                </span>
-                              </div>
-                              <div className="mb-1.5">
-                                <h4 className="font-semibold text-slate-800 text-xs truncate leading-tight">{item.productName}</h4>
-                                {item.isVariant && <p className="text-[10px] text-slate-500 font-medium truncate mt-0.5">{item.name}</p>}
-                              </div>
-                              <p className={`text-xs font-bold leading-tight ${currency === 'usd' ? 'text-emerald-600' : 'text-[#6366f1]'}`}>
-                                {currency === 'usd' ? `$${fmt(costPrice)}` : `${fmt(costPrice)} so'm`}
-                              </p>
-                            </button>
-                          );
-                        });
-                      })}
+                {/* Product search + grid */}
+                <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Mahsulot qo'shish</label>
+                    <div className="relative w-40">
+                      <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-3.5 h-3.5" />
+                      <input
+                        type="text"
+                        placeholder="Qidirish..."
+                        value={productSearch}
+                        onChange={e => setProductSearch(e.target.value)}
+                        className="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-100 rounded-xl text-xs focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1] outline-none"
+                      />
                     </div>
                   </div>
-                )}
+                  <div className="grid grid-cols-2 gap-2.5 max-h-[320px] overflow-y-auto pr-1">
+                    {products.map((product) => {
+                      const isUzsProduct = (product.currency || 'uzs').toLowerCase() === 'uzs';
+                      const rawCost = product.cost_price;
+                      const rawSale = product.sale_price;
+                      const costPrice = parseFloat(rawCost || 0) > 0 ? parseFloat(rawCost) : parseFloat(rawSale || 0);
+                      const costUzs = isUzsProduct ? costPrice : 0;
+                      const costUsd = !isUzsProduct ? costPrice : 0;
+
+                      return (
+                        <button
+                          key={product.id}
+                          onClick={() => handleProductClick(product)}
+                          className="group cursor-pointer bg-white rounded-2xl p-3 border border-slate-100 hover:border-[#6366f1] hover:shadow-md active:scale-95 transition-all text-left"
+                        >
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="w-8 h-8 bg-slate-50 rounded-xl flex items-center justify-center">
+                              <Package className="w-4 h-4 text-[#6366f1]" />
+                            </div>
+                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-lg ${(product.total_quantity ?? product.quantity ?? 0) <= 0 ? 'bg-red-50 text-red-500' : 'bg-emerald-50 text-emerald-600'}`}>
+                              {(product.total_quantity ?? product.quantity ?? 0)} {product.has_variants ? 'jami' : (product.unit || 'dona')}
+                            </span>
+                          </div>
+                          <h4 className="font-semibold text-slate-800 text-xs mb-1.5 truncate leading-tight">{product.name}</h4>
+                          <div className="flex items-center justify-between">
+                            <div className="flex flex-col gap-0.5">
+                              {product.has_variants ? (
+                                <p className="text-slate-500 font-bold text-[10px] leading-tight">
+                                  {product.variant_count} ta variant
+                                </p>
+                              ) : (
+                                <>
+                                  {costUzs > 0 && <p className="text-[#6366f1] font-bold text-xs leading-tight">{costUzs.toLocaleString()} so'm</p>}
+                                  {costUsd > 0 && <p className="text-emerald-600 font-bold text-xs leading-tight">${costUsd.toLocaleString()}</p>}
+                                </>
+                              )}
+                            </div>
+                            <div className="w-6 h-6 bg-slate-50 text-[#6366f1] rounded-lg flex items-center justify-center group-hover:bg-[#6366f1] group-hover:text-white transition-colors">
+                              {product.has_variants ? <CaretRight className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
 
                 {/* Cart */}
                 {cart.length > 0 && (
@@ -383,9 +363,8 @@ const Purchases = () => {
                             </div>
                             <div className="flex items-center gap-2">
                               <button
-                                onClick={() => (modalMode === 'create' || modalMode === 'edit') && setCart(cart.map(c => c.cartId === item.cartId ? { ...c, quantity: Math.max(1, (parseInt(c.quantity) || 1) - 1) } : c))}
-                                disabled={!['create','edit'].includes(modalMode)}
-                                className="w-11 h-11 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 active:scale-90 transition-all disabled:opacity-50"
+                                onClick={() => setCart(cart.map(c => c.cartId === item.cartId ? { ...c, quantity: Math.max(1, (parseInt(c.quantity, 10) || 1) - 1) } : c))}
+                                className="w-11 h-11 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 active:scale-90 transition-all"
                               >
                                 <Minus className="w-5 h-5" />
                               </button>
@@ -393,29 +372,25 @@ const Purchases = () => {
                                 type="number"
                                 min="1"
                                 value={item.quantity}
-                                disabled={!['create','edit'].includes(modalMode)}
                                 onChange={(e) => setCart(cart.map(c => c.cartId === item.cartId ? { ...c, quantity: e.target.value } : c))}
                                 onBlur={(e) => {
-                                  const val = parseInt(e.target.value) || 1;
+                                  const val = parseInt(e.target.value, 10) || 1;
                                   setCart(cart.map(c => c.cartId === item.cartId ? { ...c, quantity: val } : c));
                                 }}
-                                className="flex-1 h-11 text-center font-black text-slate-900 text-lg bg-slate-50 rounded-2xl outline-none border border-slate-100 focus:border-[#6366f1] disabled:opacity-70 disabled:bg-slate-100"
+                                className="flex-1 h-11 text-center font-black text-slate-900 text-lg bg-slate-50 rounded-2xl outline-none border border-slate-100 focus:border-[#6366f1]"
                               />
                               <button
-                                onClick={() => (modalMode === 'create' || modalMode === 'edit') && setCart(cart.map(c => c.cartId === item.cartId ? { ...c, quantity: (parseInt(c.quantity) || 1) + 1 } : c))}
-                                disabled={!['create','edit'].includes(modalMode)}
-                                className="w-11 h-11 rounded-2xl bg-[#6366f1] flex items-center justify-center text-white hover:bg-blue-700 active:scale-90 transition-all disabled:opacity-50"
+                                onClick={() => setCart(cart.map(c => c.cartId === item.cartId ? { ...c, quantity: (parseInt(c.quantity, 10) || 1) + 1 } : c))}
+                                className="w-11 h-11 rounded-2xl bg-[#6366f1] flex items-center justify-center text-white hover:bg-blue-700 active:scale-90 transition-all"
                               >
                                 <Plus className="w-5 h-5" />
                               </button>
-                              {['create','edit'].includes(modalMode) && (
-                                <button
-                                  onClick={() => removeFromCart(item.cartId)}
-                                  className="w-11 h-11 rounded-2xl bg-red-500 flex items-center justify-center text-white hover:bg-red-600 active:scale-90 transition-all"
-                                >
-                                  <X className="w-5 h-5" />
-                                </button>
-                              )}
+                              <button
+                                onClick={() => removeFromCart(item.cartId)}
+                                className="w-11 h-11 rounded-2xl bg-red-500 flex items-center justify-center text-white hover:bg-red-600 active:scale-90 transition-all"
+                              >
+                                <X className="w-5 h-5" />
+                              </button>
                             </div>
                           </div>
                         );
@@ -424,28 +399,15 @@ const Purchases = () => {
                   </div>
                 )}
 
-                <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-4">
-                  <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">To'lov usuli</label>
-                    <select
-                      value={paymentMethod}
-                      onChange={(e) => setPaymentMethod(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 text-xs font-semibold focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1] outline-none"
-                    >
-                      {paymentMethods.map(method => (
-                        <option key={method.id} value={method.id}>{method.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Izoh (ixtiyoriy)</label>
-                    <textarea
-                      value={note}
-                      onChange={(e) => setNote(e.target.value)}
-                      placeholder="Xarid haqida izoh..."
-                      className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 text-xs focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1] outline-none min-h-[70px] resize-none"
-                    />
-                  </div>
+                {/* Note */}
+                <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Izoh (ixtiyoriy)</label>
+                  <textarea
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    placeholder="Xarid haqida izoh..."
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 text-xs focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1] outline-none min-h-[70px] resize-none"
+                  />
                 </div>
               </div>
 
@@ -459,6 +421,63 @@ const Purchases = () => {
                   {isPending ? <Spinner className="animate-spin w-5 h-5" /> : <Check className="w-5 h-5" />}
                   {modalMode === 'create' ? 'Xaridni Saqlash' : "O'zgarishlarni Saqlash"}
                 </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Variant Selection Modal — Sotuvdagi bilan bir xil */}
+      <AnimatePresence>
+        {showVariantModal && selectedProductForVariants && (
+          <motion.div
+            variants={backdropVariants} initial="hidden" animate="visible" exit="exit"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[110] flex items-end"
+            onClick={() => setShowVariantModal(false)}
+          >
+            <motion.div
+              variants={modalVariants} initial="hidden" animate="visible" exit="exit"
+              className="bg-white rounded-t-3xl w-full max-h-[90vh] overflow-hidden flex flex-col origin-bottom"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900">{selectedProductForVariants.name}</h2>
+                  <p className="text-xs text-slate-400 mt-0.5">Variantni tanlang</p>
+                </div>
+                <button onClick={() => setShowVariantModal(false)} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-200">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="p-4 overflow-y-auto space-y-2">
+                {selectedProductForVariants.variants?.map((variant) => {
+                  const isUsd = (variant.currency || 'uzs').toLowerCase() === 'usd';
+                  const rawCost = variant.cost_price;
+                  const rawSale = variant.sale_price;
+                  const costPrice = parseFloat(rawCost || 0) > 0 ? parseFloat(rawCost) : parseFloat(rawSale || 0);
+                  return (
+                    <div
+                      key={variant.id}
+                      onClick={() => addToCart(selectedProductForVariants, variant)}
+                      className="flex items-center justify-between p-3 rounded-2xl border border-slate-100 hover:border-[#6366f1] bg-white cursor-pointer hover:shadow-sm transition-all"
+                    >
+                      <div className="min-w-0 pr-3">
+                        <h4 className="font-bold text-slate-800 text-sm truncate">{variant.name}</h4>
+                        {variant.barcode && <p className="text-[10px] text-slate-400 mt-0.5">{variant.barcode}</p>}
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className={`text-[10px] font-bold ${isUsd ? 'text-emerald-600' : 'text-[#6366f1]'}`}>
+                            {isUsd ? `$${costPrice.toLocaleString()}` : `${costPrice.toLocaleString()} so'm`}
+                          </span>
+                          <span className="text-[10px] text-slate-300">•</span>
+                          <span className="text-[10px] font-semibold text-slate-500">Qoldiq: {variant.quantity} {variant.unit}</span>
+                        </div>
+                      </div>
+                      <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 bg-indigo-50 text-[#6366f1]">
+                        <Plus className="w-4 h-4" />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </motion.div>
           </motion.div>
@@ -490,7 +509,7 @@ const Purchases = () => {
                     }}
                     className="w-8 h-8 bg-slate-50 text-indigo-500 rounded-xl flex items-center justify-center hover:bg-indigo-500 hover:text-white transition-all"
                   >
-                    <Pencil className="w-4 h-4" />
+                    <PencilSimple className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => setViewPurchase(null)}
@@ -510,7 +529,10 @@ const Purchases = () => {
                 <div className="space-y-2 mb-5">
                   {(purchaseDetail || viewPurchase).items?.map(item => (
                     <div key={item.id} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl">
-                      <p className="text-sm font-bold text-slate-900">{item.product_name}</p>
+                      <p className="text-sm font-bold text-slate-900">
+                        {item.product_name}
+                        {item.variant_name && <span className="text-slate-400 font-normal"> ({item.variant_name})</span>}
+                      </p>
                       <span className="text-sm font-black text-[#6366f1]">{item.quantity} dona</span>
                     </div>
                   ))}

@@ -64,12 +64,10 @@ api.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${access}`;
         return api(originalRequest);
       } catch (refreshError) {
-        // If refresh fails, logout user
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('user');
 
-        // Only redirect if not already on login page to avoid loops
         if (!window.location.pathname.includes('/login')) {
           toast.error('Seans muddati tugadi. Iltimos, qaytadan kiring.');
           window.location.href = '/login';
@@ -78,13 +76,11 @@ api.interceptors.response.use(
       }
     }
 
-    // Professional Error Handling
     const errorMessage = response?.data?.detail ||
       response?.data?.message ||
       (response?.data && typeof response.data === 'object' ? Object.values(response.data).flat()[0] : null) ||
       'Xatolik yuz berdi. Iltimos, qaytadan urinib ko\'ring.';
 
-    // Don't show toast for 401 (handled above) or 5xx on reports (backend issue, shown in UI)
     const isReportEndpoint = originalRequest?.url?.includes('/api/reports/');
     if (response?.status !== 401 && !(response?.status >= 500 && isReportEndpoint)) {
       toast.error(errorMessage);

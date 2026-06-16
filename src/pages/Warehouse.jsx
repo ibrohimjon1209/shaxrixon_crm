@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import {
-  MagnifyingGlass, Plus, PencilSimple, Trash, X, Package,
+  MagnifyingGlass, Plus, Minus, PencilSimple, Trash, X, Package,
   Check, Spinner, WarningCircle, CaretLeft, CaretRight,
   Stack, CaretRight as ArrowRight
 } from '@phosphor-icons/react';
@@ -141,9 +141,9 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, submitLabel,
   const [isDeletingVariant, setIsDeletingVariant] = useState(false);
 
   const handleAddVariant = () => {
-    setFormData({ 
-      ...formData, 
-      variants: [...(formData.variants || []), { name: '', barcode: '', quantity: '', sale_price: '', cost_price: '', currency: 'uzs', unit: 'dona', is_active: true }] 
+    setFormData({
+      ...formData,
+      variants: [...(formData.variants || []), { name: '', quantity: '', sale_price: '', cost_price: '', currency: 'uzs', unit: 'dona', is_active: true }]
     });
     setTimeout(() => {
       variantsEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -227,58 +227,75 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, submitLabel,
                 setFormData({ ...formData, variants: newVariants });
               };
               const removeVariant = () => requestRemoveVariant(variant, idx);
+              const isUzs = (variant.currency || 'uzs') === 'uzs';
+              const symbol = isUzs ? "so'm" : '$';
+              const symbolClass = isUzs ? 'text-[#6366f1]' : 'text-emerald-600';
               return (
-                <div key={idx} className="bg-slate-50 p-3 rounded-2xl border border-slate-200">
-                  <div className="grid grid-cols-2 gap-3 mb-3">
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Nomi</label>
-                      <input value={variant.name || ''} onChange={e => updateVariant('name', e.target.value)} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none" placeholder="Masalan: XL, Qizil" />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Shtrix-kod</label>
-                      <input value={variant.barcode || ''} onChange={e => updateVariant('barcode', e.target.value)} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none" placeholder="Shtrix-kod" />
+                <div key={idx} className="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Nomi</label>
+                    <input value={variant.name || ''} onChange={e => updateVariant('name', e.target.value)} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none" placeholder="Masalan: XL, Qizil" />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Birlik</label>
+                    <select value={variant.unit || 'dona'} onChange={e => updateVariant('unit', e.target.value)} className="w-full h-9 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none">
+                      <option value="dona">Dona</option>
+                      <option value="kg">Kg</option>
+                      <option value="litr">Litr</option>
+                      <option value="metr">Metr</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Miqdor</label>
+                    <div className="flex items-center gap-1.5">
+                      <button type="button" onClick={() => updateVariant('quantity', Math.max(0, (parseInt(variant.quantity) || 0) - 1))} className="w-9 h-9 rounded-xl bg-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-300 active:scale-90 transition-all shrink-0">
+                        <Minus className="w-4 h-4" />
+                      </button>
+                      <input type="number" value={variant.quantity || ''} onChange={e => updateVariant('quantity', e.target.value)} className="flex-1 h-9 text-center font-bold text-slate-900 bg-white border border-slate-200 rounded-xl text-xs outline-none focus:border-[#6366f1]" placeholder="0" />
+                      <button type="button" onClick={() => updateVariant('quantity', (parseInt(variant.quantity) || 0) + 1)} className="w-9 h-9 rounded-xl bg-[#6366f1] flex items-center justify-center text-white hover:bg-blue-700 active:scale-90 transition-all shrink-0">
+                        <Plus className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
-                  <div className="grid grid-cols-3 gap-3 mb-3">
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Tan narx</label>
-                      <input type="number" value={variant.cost_price || ''} onChange={e => updateVariant('cost_price', e.target.value)} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none" placeholder="0" />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Sotuv narxi</label>
-                      <input type="number" value={variant.sale_price || ''} onChange={e => updateVariant('sale_price', e.target.value)} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none" placeholder="0" />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Valyuta</label>
-                      <select value={variant.currency || 'uzs'} onChange={e => updateVariant('currency', e.target.value)} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none">
-                        <option value="uzs">UZS</option>
-                        <option value="usd">USD</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3 mb-3">
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Miqdor</label>
-                      <div className="flex items-center gap-1.5">
-                        <button type="button" onClick={() => updateVariant('quantity', Math.max(0, (parseInt(variant.quantity) || 0) - 1))} className="w-9 h-9 rounded-xl bg-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-300 active:scale-90 transition-all shrink-0">
-                          <Minus className="w-4 h-4" />
-                        </button>
-                        <input type="number" value={variant.quantity || ''} onChange={e => updateVariant('quantity', e.target.value)} className="flex-1 h-9 text-center font-bold text-slate-900 bg-white border border-slate-200 rounded-xl text-xs outline-none focus:border-[#6366f1]" placeholder="0" />
-                        <button type="button" onClick={() => updateVariant('quantity', (parseInt(variant.quantity) || 0) + 1)} className="w-9 h-9 rounded-xl bg-[#6366f1] flex items-center justify-center text-white hover:bg-blue-700 active:scale-90 transition-all shrink-0">
-                          <Plus className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Birlik</label>
-                      <select value={variant.unit || 'dona'} onChange={e => updateVariant('unit', e.target.value)} className="w-full h-9 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none">
-                        <option value="dona">Dona</option>
-                        <option value="kg">Kg</option>
-                        <option value="litr">Litr</option>
-                        <option value="metr">Metr</option>
-                      </select>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Valyuta</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => { updateVariant('currency', 'usd'); }}
+                        className={`py-2 rounded-xl font-bold text-xs transition-all ${!isUzs ? 'bg-emerald-500 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-100'}`}
+                      >
+                        $ (USD)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { updateVariant('currency', 'uzs'); }}
+                        className={`py-2 rounded-xl font-bold text-xs transition-all ${isUzs ? 'bg-[#6366f1] text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-100'}`}
+                      >
+                        so'm (UZS)
+                      </button>
                     </div>
                   </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Tan narx</label>
+                    <div className="relative">
+                      <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold ${symbolClass}`}>{symbol}</span>
+                      <input type="number" value={variant.cost_price || ''} onChange={e => updateVariant('cost_price', e.target.value)} className={`w-full py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none ${isUzs ? 'pl-12' : 'pl-7'} pr-3`} placeholder="0" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Sotuv narxi</label>
+                    <div className="relative">
+                      <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold ${symbolClass}`}>{symbol}</span>
+                      <input type="number" value={variant.sale_price || ''} onChange={e => updateVariant('sale_price', e.target.value)} className={`w-full py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none ${isUzs ? 'pl-12' : 'pl-7'} pr-3`} placeholder="0" />
+                    </div>
+                  </div>
+
                   <button type="button" onClick={removeVariant} className="w-full py-2 bg-red-50 text-red-500 rounded-xl text-xs font-bold hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-1.5">
                     <X className="w-3.5 h-3.5" /> O'chirish
                   </button>
@@ -338,20 +355,14 @@ const VariantForm = ({ formData, setFormData, onSubmit, submitLabel, isPending }
         <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className={inputClass} placeholder="Masalan: Qizil, XL, yoki 1KG" />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="block text-xs font-semibold text-slate-500 mb-1.5">Shtrix-kod</label>
-          <input type="text" value={formData.barcode} onChange={(e) => setFormData({ ...formData, barcode: e.target.value })} className={inputClass} placeholder="Shtrix-kod" />
-        </div>
-        <div>
-          <label className="block text-xs font-semibold text-slate-500 mb-1.5">Birlik</label>
-          <select value={formData.unit} onChange={(e) => setFormData({ ...formData, unit: e.target.value })} className={inputClass}>
-            <option value="dona">Dona</option>
-            <option value="kg">Kg</option>
-            <option value="litr">Litr</option>
-            <option value="metr">Metr</option>
-          </select>
-        </div>
+      <div>
+        <label className="block text-xs font-semibold text-slate-500 mb-1.5">Birlik</label>
+        <select value={formData.unit} onChange={(e) => setFormData({ ...formData, unit: e.target.value })} className={inputClass}>
+          <option value="dona">Dona</option>
+          <option value="kg">Kg</option>
+          <option value="litr">Litr</option>
+          <option value="metr">Metr</option>
+        </select>
       </div>
 
       <div>
@@ -447,7 +458,6 @@ const Warehouse = () => {
 
   const [variantFormData, setVariantFormData] = useState({
     name: '',
-    barcode: '',
     quantity: '',
     sale_price: '',
     cost_price: '',
@@ -483,7 +493,6 @@ const Warehouse = () => {
         variants: singleProduct.variants?.map(v => ({
           id: v.id,
           name: v.name || '',
-          barcode: v.barcode || '',
           quantity: v.quantity || '',
           sale_price: v.sale_price || '',
           cost_price: v.cost_price || '',
@@ -574,7 +583,6 @@ const Warehouse = () => {
       payload.variants = formData.variants.map(v => ({
         ...(v.id ? { id: v.id } : {}),
         name: v.name || '',
-        barcode: v.barcode || '',
         cost_price: v.cost_price || '0',
         sale_price: v.sale_price || '0',
         currency: v.currency || 'uzs',
@@ -621,7 +629,6 @@ const Warehouse = () => {
       variants: product.variants?.map(v => ({
         id: v.id,
         name: v.name || '',
-        barcode: v.barcode || '',
         quantity: v.quantity || '',
         sale_price: v.sale_price || '',
         cost_price: v.cost_price || '',
@@ -684,7 +691,6 @@ const Warehouse = () => {
     const payload = {
       product: selectedProduct?.id,
       name: variantFormData.name,
-      barcode: variantFormData.barcode,
       quantity: parseInt(variantFormData.quantity) || 0,
       sale_price: variantFormData.sale_price || '0',
       currency: variantFormData.currency,
@@ -697,7 +703,7 @@ const Warehouse = () => {
   };
 
   const resetVariantForm = () => {
-    setVariantFormData({ name: '', barcode: '', quantity: '', sale_price: '', cost_price: '', currency: 'uzs', unit: 'dona' });
+    setVariantFormData({ name: '', quantity: '', sale_price: '', cost_price: '', currency: 'uzs', unit: 'dona' });
     setSelectedVariant(null);
   };
 
@@ -736,7 +742,6 @@ const Warehouse = () => {
     setSelectedVariant(variant);
     setVariantFormData({
       name: variant.name || '',
-      barcode: variant.barcode || '',
       quantity: variant.quantity?.toString() || '0',
       sale_price: variant.sale_price || '',
       cost_price: variant.cost_price || '',
@@ -914,7 +919,6 @@ const Warehouse = () => {
                                 <div className={`w-2 h-2 rounded-full shrink-0 ${vSc.dot}`} />
                                 <div className="flex-1 min-w-0">
                                   <p className="text-xs font-bold text-slate-800 truncate">{v.name}</p>
-                                  {v.barcode && <p className="text-[10px] text-slate-400">{v.barcode}</p>}
                                 </div>
                                 <p className={`text-xs font-bold shrink-0 ${isUsd ? 'text-emerald-600' : 'text-[#6366f1]'}`}>
                                   {isUsd ? `$${price.toLocaleString()}` : `${price.toLocaleString()} so'm`}
