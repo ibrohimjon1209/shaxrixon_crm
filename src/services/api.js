@@ -43,7 +43,7 @@ api.interceptors.response.use(
     const isAuthEndpoint = originalRequest.url.includes('/api/auth/login/') || originalRequest.url.includes('/api/auth/logout/') || originalRequest.url.includes('/api/auth/refresh/');
     if (response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       originalRequest._retry = true;
-
+      
       try {
         const refresh = getRefreshToken();
         if (!refresh) {
@@ -84,9 +84,9 @@ api.interceptors.response.use(
       (response?.data && typeof response.data === 'object' ? Object.values(response.data).flat()[0] : null) ||
       'Xatolik yuz berdi. Iltimos, qaytadan urinib ko\'ring.';
 
-    // Don't show toast for 401/403 (handled above) or 5xx on reports (backend issue, shown in UI)
+    // Don't show toast for 401 (handled above) or 5xx on reports (backend issue, shown in UI)
     const isReportEndpoint = originalRequest?.url?.includes('/api/reports/');
-    if (response?.status !== 401 && response?.status !== 403 && !(response?.status >= 500 && isReportEndpoint)) {
+    if (response?.status !== 401 && !(response?.status >= 500 && isReportEndpoint)) {
       toast.error(errorMessage);
     }
 
