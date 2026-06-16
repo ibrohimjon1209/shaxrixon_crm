@@ -22,6 +22,133 @@ const backdropVariants = {
   exit: { opacity: 0, transition: { duration: 0.15 } }
 };
 
+const SearchableCustomerSelect = ({ customers, selectedCustomer, onSelect }) => {
+  const [query, setQuery] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const filtered = useMemo(() => {
+    if (!query.trim()) return customers;
+    const q = query.toLowerCase().trim();
+    return customers.filter(c =>
+      (c.name || '').toLowerCase().includes(q) ||
+      (c.full_name || '').toLowerCase().includes(q) ||
+      (c.phone || '').replace(/\s/g, '').includes(q.replace(/\s/g, ''))
+    );
+  }, [customers, query]);
+
+  const handleSelect = (customer) => {
+    onSelect(customer);
+    setQuery('');
+    setIsOpen(false);
+  };
+
+  const handleClear = () => {
+    onSelect(null);
+    setQuery('');
+    setIsOpen(false);
+  };
+
+  return (
+    <div ref={containerRef} className="relative flex-1 min-w-0">
+      {/* Selected badge or Search input */}
+      {selectedCustomer && !isOpen ? (
+        <div
+          onClick={() => { setIsOpen(true); setTimeout(() => inputRef.current?.focus(), 50); }}
+          className="w-full pl-9 pr-9 py-3 bg-slate-50 border border-slate-100 rounded-xl text-slate-900 font-medium text-sm cursor-pointer hover:border-[#6366f1]/40 transition-colors overflow-hidden"
+        >
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <User className="text-[#6366f1] w-4 h-4" />
+          </div>
+          <span className="block truncate">{selectedCustomer.name} <span className="text-xs text-slate-400">({selectedCustomer.phone})</span></span>
+          <button
+            onClick={(e) => { e.stopPropagation(); handleClear(); }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-lg bg-slate-200/80 flex items-center justify-center text-slate-500 hover:bg-red-100 hover:text-red-500 transition-colors"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        </div>
+      ) : (
+        <>
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+            <MagnifyingGlass className="text-slate-400 w-4 h-4" />
+          </div>
+          <input
+            ref={inputRef}
+            type="text"
+            placeholder="Ism yoki telefon raqam..."
+            value={query}
+            onChange={(e) => { setQuery(e.target.value); setIsOpen(true); }}
+            onFocus={() => setIsOpen(true)}
+            className="w-full pl-9 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1] text-slate-900 font-medium text-sm appearance-none outline-none"
+          />
+        </>
+      )}
+
+      {/* Dropdown */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -4, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.98 }}
+            transition={{ duration: 0.12 }}
+            className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-xl z-50 overflow-hidden"
+          >
+            <div className="max-h-[220px] overflow-y-auto">
+              {filtered.length === 0 ? (
+                <div className="px-4 py-5 text-center text-sm text-slate-400">
+                  <MagnifyingGlass className="w-5 h-5 mx-auto mb-1 text-slate-300" />
+                  Mijoz topilmadi
+                </div>
+              ) : (
+                filtered.map(c => (
+                  <div
+                    key={c.id}
+                    onClick={() => handleSelect(c)}
+                    className={`px-4 py-3 flex items-center gap-3 cursor-pointer transition-colors ${
+                      selectedCustomer?.id === c.id
+                        ? 'bg-[#6366f1]/5'
+                        : 'hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${
+                      selectedCustomer?.id === c.id
+                        ? 'bg-[#6366f1] text-white'
+                        : 'bg-slate-100 text-slate-500'
+                    }`}>
+                      {(c.name || '?')[0].toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-slate-800 truncate">{c.name}</p>
+                      <p className="text-xs text-slate-400 truncate">{c.phone}</p>
+                    </div>
+                    {selectedCustomer?.id === c.id && (
+                      <Check className="w-4 h-4 text-[#6366f1] shrink-0" />
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+
 const ITEM_H = 52;
 const UZ_MONTHS = ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr'];
 
@@ -643,24 +770,11 @@ const Sales = () => {
                 Mijoz {paymentType === 'debt' ? <span className="text-red-400">*</span> : <span className="text-slate-300">(ixtiyoriy)</span>}
               </label>
                 <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <User className="text-slate-400 w-4 h-4" />
-                    </div>
-                    <select
-                      value={selectedCustomer?.id || ''}
-                      onChange={(e) => {
-                        const id = e.target.value;
-                        setSelectedCustomer(customers.find(c => c.id.toString() === id) || null);
-                      }}
-                      className="w-full pl-9 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1] text-slate-900 font-medium text-sm appearance-none outline-none"
-                    >
-                      <option value="">Mijozni tanlang...</option>
-                      {customers.map(c => (
-                        <option key={c.id} value={c.id}>{c.name} ({c.phone})</option>
-                      ))}
-                    </select>
-                  </div>
+                  <SearchableCustomerSelect
+                    customers={customers}
+                    selectedCustomer={selectedCustomer}
+                    onSelect={setSelectedCustomer}
+                  />
                   <button
                     onClick={() => setIsAddCustomerModalOpen(true)}
                     className="w-[46px] h-[46px] shrink-0 bg-[#6366f1] hover:bg-blue-700 text-white rounded-xl flex items-center justify-center transition-colors"

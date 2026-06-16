@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import {
@@ -128,6 +128,7 @@ const CustomerDetailModal = ({ customer, onClose, onDelete, onEdit }) => {
   const [payAmount, setPayAmount] = useState('');
   const [payCurrency, setPayCurrency] = useState('uzs');
   const [showHistory, setShowHistory] = useState(false);
+  const scrollRef = useRef(null);
   const payDebtMutation = usePayDebt();
   const sendReminderMutation = useSendDebtReminder();
   const { data: customerDetail, isLoading: detailLoading } = useCustomer(customer?.id);
@@ -169,6 +170,16 @@ const CustomerDetailModal = ({ customer, onClose, onDelete, onEdit }) => {
     try {
       await sendReminderMutation.mutateAsync(customer.id);
     } catch (error) {}
+  };
+
+  const handleOpenPayForm = () => {
+    setPayCurrency(debtUZS > 0 ? 'uzs' : 'usd');
+    setShowPayForm(true);
+    setTimeout(() => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+      }
+    }, 100);
   };
 
   return (
@@ -214,7 +225,7 @@ const CustomerDetailModal = ({ customer, onClose, onDelete, onEdit }) => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-5 pb-8 space-y-4">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 pb-8 space-y-4 scroll-smooth">
         {/* Stats row */}
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 text-center">
@@ -254,7 +265,14 @@ const CustomerDetailModal = ({ customer, onClose, onDelete, onEdit }) => {
           </div>
           <div className="flex flex-col p-4">
             <button
-              onClick={() => setShowHistory(!showHistory)}
+              onClick={() => {
+                setShowHistory(!showHistory);
+                if (!showHistory) {
+                   setTimeout(() => {
+                     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+                   }, 200);
+                }
+              }}
               className="flex items-center justify-between w-full text-left"
             >
               <div className="flex items-center gap-3">
@@ -407,10 +425,7 @@ const CustomerDetailModal = ({ customer, onClose, onDelete, onEdit }) => {
             ) : (
               <div className="grid grid-cols-2 gap-3">
                 <button
-                  onClick={() => {
-                    setPayCurrency(debtUZS > 0 ? 'uzs' : 'usd');
-                    setShowPayForm(true);
-                  }}
+                  onClick={handleOpenPayForm}
                   className="bg-emerald-600 text-white rounded-2xl py-3.5 font-bold flex items-center justify-center gap-2 text-sm"
                 >
                   <CreditCard className="w-4 h-4" /> Qarz To'lash
