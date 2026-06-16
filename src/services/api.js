@@ -16,7 +16,7 @@ const getRefreshToken = () => localStorage.getItem('refresh_token');
 
 // Add a request interceptor to include the access token in headers
 api.interceptors.request.use(
-  (config) => {
+  (config) => { 
     const token = getAccessToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
