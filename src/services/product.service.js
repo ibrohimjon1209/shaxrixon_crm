@@ -114,6 +114,26 @@ const productService = {
   getLowStockProducts: async () => {
     const response = await api.get('/api/products/low_stock/');
     return response.data;
+  },
+
+  getVariants: async (params) => {
+    const response = await api.get('/api/products/variants/', { params });
+    return response.data;
+  },
+  createVariant: async (data) => {
+    const response = await api.post('/api/products/variants/', data);
+    return response.data;
+  },
+  getVariant: async (id) => {
+    const response = await api.get(`/api/products/variants/${id}/`);
+    return response.data;
+  },
+  updateVariant: async (id, data) => {
+    const response = await api.patch(`/api/products/variants/${id}/`, data);
+    return response.data;
+  },
+  deleteVariant: async (id) => {
+    await api.delete(`/api/products/variants/${id}/`);
   }
 };
 

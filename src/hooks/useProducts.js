@@ -104,3 +104,46 @@ export const useProductsForSale = (params) => {
     queryFn: () => productService.getProductsForSale(params),
   });
 };
+
+export const useVariants = (params) => {
+  return useQuery({
+    queryKey: ['variants', params],
+    queryFn: () => productService.getVariants(params),
+  });
+};
+
+export const useCreateVariant = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data) => productService.createVariant(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['variants'] });
+      toast.success('Variant muvaffaqiyatli qo\'shildi');
+    },
+  });
+};
+
+export const useUpdateVariant = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }) => productService.updateVariant(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['variants'] });
+      toast.success('Variant muvaffaqiyatli yangilandi');
+    },
+  });
+};
+
+export const useDeleteVariant = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => productService.deleteVariant(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['variants'] });
+      toast.success('Variant muvaffaqiyatli o\'chirildi');
+    },
+  });
+};
