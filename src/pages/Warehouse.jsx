@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import {
   MagnifyingGlass, Plus, PencilSimple, Trash, X, Package,
   Check, Spinner, WarningCircle, CaretLeft, CaretRight,
@@ -10,14 +10,172 @@ import {
   useLowStockProducts,
   useVariants, useCreateVariant, useUpdateVariant, useDeleteVariant
 } from '../hooks/useProducts';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const inputClass = "w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1] transition-all";
 
-const ProductForm = ({ formData, setFormData, categories, onSubmit, submitLabel, isPending }) => {
-  const isUzs = formData.currency === 'uzs';
-  const hasPrice = parseFloat(formData.sale_price || 0) > 0;
-  const symbol = isUzs ? "so'm" : '$';
-  const symbolClass = isUzs ? 'text-[#6366f1]' : 'text-emerald-600';
+const SearchableCategorySelect = ({ categories, selectedCategoryId, onSelect }) => {
+  const [query, setQuery] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const filtered = useMemo(() => {
+    if (!query.trim()) return categories;
+    const q = query.toLowerCase().trim();
+    return categories.filter(c => (c.name || '').toLowerCase().includes(q));
+  }, [categories, query]);
+
+  const selectedCategory = categories.find(c => c.id.toString() === selectedCategoryId?.toString());
+
+  const handleSelect = (categoryId) => {
+    onSelect(categoryId);
+    setQuery('');
+    setIsOpen(false);
+  };
+
+  const handleClear = () => {
+    onSelect('');
+    setQuery('');
+    setIsOpen(false);
+  };
+
+  return (
+    <div ref={containerRef} className="relative flex-1 min-w-0">
+      {selectedCategory && !isOpen ? (
+        <div
+          onClick={() => { setIsOpen(true); setTimeout(() => inputRef.current?.focus(), 50); }}
+          className="w-full pl-9 pr-9 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 font-medium text-sm cursor-pointer hover:border-[#6366f1]/40 transition-colors overflow-hidden"
+        >
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Stack className="text-[#6366f1] w-4 h-4" />
+          </div>
+          <span className="block truncate">{selectedCategory.name}</span>
+          <button
+            onClick={(e) => { e.stopPropagation(); handleClear(); }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-lg bg-slate-200/80 flex items-center justify-center text-slate-500 hover:bg-red-100 hover:text-red-500 transition-colors"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        </div>
+      ) : (
+        <>
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+            <MagnifyingGlass className="text-slate-400 w-4 h-4" />
+          </div>
+          <input
+            ref={inputRef}
+            type="text"
+            placeholder="Kategoriyani qidirish..."
+            value={query}
+            onChange={(e) => { setQuery(e.target.value); setIsOpen(true); }}
+            onFocus={() => setIsOpen(true)}
+            className="w-full pl-9 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1] text-slate-900 font-medium text-sm appearance-none outline-none"
+          />
+        </>
+      )}
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -4, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.98 }}
+            transition={{ duration: 0.12 }}
+            className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl shadow-slate-200/60 z-50 overflow-hidden"
+          >
+            <div className="max-h-[220px] overflow-y-auto">
+              {filtered.length === 0 ? (
+                <div className="px-4 py-5 text-center text-sm text-slate-400">
+                  <MagnifyingGlass className="w-5 h-5 mx-auto mb-1 text-slate-300" />
+                  Kategoriya topilmadi
+                </div>
+              ) : (
+                filtered.map(c => (
+                  <div
+                    key={c.id}
+                    onClick={() => handleSelect(c.id.toString())}
+                    className={`px-4 py-3 flex items-center gap-3 cursor-pointer transition-colors ${
+                      selectedCategoryId?.toString() === c.id.toString()
+                        ? 'bg-[#6366f1]/5'
+                        : 'hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${
+                      selectedCategoryId?.toString() === c.id.toString()
+                        ? 'bg-[#6366f1] text-white'
+                        : 'bg-slate-100 text-slate-500'
+                    }`}>
+                      {(c.name || '?')[0].toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-slate-800 truncate">{c.name}</p>
+                    </div>
+                    {selectedCategoryId?.toString() === c.id.toString() && (
+                      <Check className="w-4 h-4 text-[#6366f1] shrink-0" />
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+const ProductForm = ({ formData, setFormData, categories, onSubmit, submitLabel, isPending, onDeleteVariant }) => {
+  const variantsEndRef = useRef(null);
+  const [variantToDelete, setVariantToDelete] = useState(null);
+  const [isDeletingVariant, setIsDeletingVariant] = useState(false);
+
+  const handleAddVariant = () => {
+    setFormData({ 
+      ...formData, 
+      variants: [...(formData.variants || []), { name: '', barcode: '', quantity: '', sale_price: '', cost_price: '', currency: 'uzs', unit: 'dona', is_active: true }] 
+    });
+    setTimeout(() => {
+      variantsEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+  };
+
+  const requestRemoveVariant = (variant, index) => {
+    if (variant.id) {
+      setVariantToDelete({ ...variant, index });
+    } else {
+      const newVariants = formData.variants.filter((_, i) => i !== index);
+      setFormData({ ...formData, variants: newVariants });
+    }
+  };
+
+  const confirmRemoveVariant = async () => {
+    if (variantToDelete) {
+      if (onDeleteVariant) {
+        setIsDeletingVariant(true);
+        try {
+          await onDeleteVariant(variantToDelete.id);
+        } catch (error) {
+          setIsDeletingVariant(false);
+          return;
+        }
+        setIsDeletingVariant(false);
+      }
+      const newVariants = formData.variants.filter((_, i) => i !== variantToDelete.index);
+      setFormData({ ...formData, variants: newVariants });
+      setVariantToDelete(null);
+    }
+  };
 
   return (
     <div className="p-4 space-y-4">
@@ -26,84 +184,135 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, submitLabel,
         <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className={inputClass} placeholder="Mahsulot nomini kiriting" />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="block text-xs font-semibold text-slate-500 mb-1.5">Kategoriya</label>
-          <select value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })} className={inputClass}>
-            <option value="">Tanlang...</option>
-            {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className="block text-xs font-semibold text-slate-500 mb-1.5">Birlik</label>
-          <select value={formData.unit} onChange={(e) => setFormData({ ...formData, unit: e.target.value })} className={inputClass}>
-            <option value="dona">Dona</option>
-            <option value="kg">Kg</option>
-            <option value="litr">Litr</option>
-            <option value="metr">Metr</option>
-          </select>
-        </div>
+      <div>
+        <label className="block text-xs font-semibold text-slate-500 mb-1.5">Kategoriya</label>
+        <SearchableCategorySelect
+          categories={categories}
+          selectedCategoryId={formData.category}
+          onSelect={(id) => setFormData({ ...formData, category: id })}
+        />
       </div>
 
       <div>
-        <label className="block text-xs font-semibold text-slate-500 mb-1.5">Miqdor</label>
-        <input type="number" value={formData.quantity} onChange={(e) => setFormData({ ...formData, quantity: e.target.value })} className={inputClass} placeholder="0" />
+        <label className="block text-xs font-semibold text-slate-500 mb-1.5">Tavsif <span className="text-slate-400 font-normal">(ixtiyoriy)</span></label>
+        <textarea
+          value={formData.description || ''}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          rows={3}
+          className={inputClass + ' resize-none'}
+          placeholder="Mahsulot haqida qo'shimcha ma'lumot..."
+        />
       </div>
 
-      <div>
-        <label className="block text-xs font-semibold text-slate-500 mb-2">Valyuta</label>
-        <div className="grid grid-cols-2 gap-2">
+      <div className="pt-4 border-t border-slate-100">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-bold text-slate-800">Variantlar</h3>
           <button
             type="button"
-            onClick={() => setFormData({ ...formData, currency: 'usd', sale_price: '', cost_price: '' })}
-            className={`py-2.5 rounded-xl font-bold text-sm transition-all ${!isUzs ? 'bg-emerald-500 text-white shadow-sm' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+            onClick={handleAddVariant}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-[#6366f1] rounded-xl text-xs font-bold hover:bg-[#6366f1] hover:text-white transition-all"
           >
-            $ (USD)
-          </button>
-          <button
-            type="button"
-            onClick={() => setFormData({ ...formData, currency: 'uzs', sale_price: '', cost_price: '' })}
-            className={`py-2.5 rounded-xl font-bold text-sm transition-all ${isUzs ? 'bg-[#6366f1] text-white shadow-sm' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
-          >
-            so'm (UZS)
+            <Plus className="w-3.5 h-3.5" /> Qo'shish
           </button>
         </div>
-      </div>
 
-      <div>
-        <label className="block text-xs font-semibold text-slate-500 mb-1.5">Tan narx</label>
-        <div className="relative">
-          <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold ${symbolClass}`}>{symbol}</span>
-          <input
-            type="number"
-            value={formData.cost_price}
-            onChange={(e) => setFormData({ ...formData, cost_price: e.target.value })}
-            className={inputClass + (isUzs ? ' pl-12' : ' pl-7')}
-            placeholder="0"
-          />
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-xs font-semibold text-slate-500 mb-1.5">Sotuv narxi</label>
-        <div className="relative">
-          <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold ${symbolClass}`}>{symbol}</span>
-          <input
-            type="number"
-            value={formData.sale_price}
-            onChange={(e) => setFormData({ ...formData, sale_price: e.target.value })}
-            className={inputClass + (isUzs ? ' pl-12' : ' pl-7')}
-            placeholder="0"
-          />
-        </div>
+        {!(formData.variants?.length) ? (
+          <p className="text-xs text-slate-400 text-center py-3">Variant qo'shilmagan</p>
+        ) : (
+          <div className="space-y-3">
+            {formData.variants.map((variant, idx) => {
+              const updateVariant = (field, value) => {
+                const newVariants = [...formData.variants];
+                newVariants[idx] = { ...newVariants[idx], [field]: value };
+                setFormData({ ...formData, variants: newVariants });
+              };
+              const removeVariant = () => requestRemoveVariant(variant, idx);
+              return (
+                <div key={idx} className="bg-slate-50 p-3 rounded-2xl relative border border-slate-200">
+                  <button type="button" onClick={removeVariant} className="absolute top-2 right-2 text-slate-400 hover:text-red-500 transition-colors">
+                    <X className="w-4 h-4" />
+                  </button>
+                  <div className="grid grid-cols-2 gap-3 pr-6 mb-3">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Nomi</label>
+                      <input value={variant.name || ''} onChange={e => updateVariant('name', e.target.value)} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none" placeholder="Masalan: XL, Qizil" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Shtrix-kod</label>
+                      <input value={variant.barcode || ''} onChange={e => updateVariant('barcode', e.target.value)} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none" placeholder="Shtrix-kod" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3 mb-3">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Tan narx</label>
+                      <input type="number" value={variant.cost_price || ''} onChange={e => updateVariant('cost_price', e.target.value)} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none" placeholder="0" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Sotuv narxi</label>
+                      <input type="number" value={variant.sale_price || ''} onChange={e => updateVariant('sale_price', e.target.value)} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none" placeholder="0" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Valyuta</label>
+                      <select value={variant.currency || 'uzs'} onChange={e => updateVariant('currency', e.target.value)} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none">
+                        <option value="uzs">UZS</option>
+                        <option value="usd">USD</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Miqdor</label>
+                      <input type="number" value={variant.quantity || ''} onChange={e => updateVariant('quantity', e.target.value)} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none" placeholder="0" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Birlik</label>
+                      <select value={variant.unit || 'dona'} onChange={e => updateVariant('unit', e.target.value)} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none">
+                        <option value="dona">Dona</option>
+                        <option value="kg">Kg</option>
+                        <option value="litr">Litr</option>
+                        <option value="metr">Metr</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+            <div ref={variantsEndRef} />
+          </div>
+        )}
       </div>
 
       <div className="flex gap-3 pt-2">
-        <button onClick={onSubmit} disabled={isPending || !formData.name || !hasPrice} className="flex-1 px-4 py-3.5 bg-[#6366f1] text-white rounded-2xl font-bold hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2">
+        <button onClick={onSubmit} disabled={isPending || !formData.name} className="flex-1 px-4 py-3.5 bg-[#6366f1] text-white rounded-2xl font-bold hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2">
           {isPending && <Spinner className="animate-spin w-4 h-4" />}
           {submitLabel}
         </button>
       </div>
+
+      {variantToDelete && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-center justify-center px-4" onClick={() => setVariantToDelete(null)}>
+          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="text-center mb-5">
+              <div className="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                <Trash className="w-6 h-6 text-red-500" />
+              </div>
+              <h3 className="text-base font-bold text-slate-900 mb-1">Variantni o'chirish</h3>
+              <p className="text-sm text-slate-500">"{variantToDelete.name}" variantini o'chirmoqchimisiz?</p>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setVariantToDelete(null)} disabled={isDeletingVariant} className="flex-1 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold text-sm hover:bg-slate-200">Bekor</button>
+              <button
+                onClick={confirmRemoveVariant}
+                disabled={isDeletingVariant}
+                className="flex-1 py-3 bg-red-500 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50 hover:bg-red-600"
+              >
+                {isDeletingVariant && <Spinner className="animate-spin w-4 h-4" />}
+                O'chirish
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -241,11 +450,10 @@ const Warehouse = () => {
   const [formData, setFormData] = useState({
     name: '',
     category: '',
-    quantity: '',
-    sale_price: '',
-    cost_price: '',
-    currency: 'usd',
-    unit: 'dona',
+    description: '',
+    image: 'string',
+    is_active: true,
+    variants: []
   });
 
   useEffect(() => { setPage(1); }, [searchTerm]);
@@ -261,11 +469,19 @@ const Warehouse = () => {
       setFormData({
         name: singleProduct.name || '',
         category: singleProduct.category?.toString() || '',
-        quantity: singleProduct.quantity?.toString() || '0',
-        sale_price: singleProduct.sale_price || '',
-        cost_price: singleProduct.cost_price || '',
-        currency: singleProduct.currency || 'uzs',
-        unit: singleProduct.unit || 'dona',
+        description: singleProduct.description || '',
+        image: singleProduct.image || 'string',
+        is_active: singleProduct.is_active !== undefined ? singleProduct.is_active : true,
+        variants: singleProduct.variants?.map(v => ({
+          id: v.id,
+          name: v.name || '',
+          barcode: v.barcode || '',
+          quantity: v.quantity || '',
+          sale_price: v.sale_price || '',
+          cost_price: v.cost_price || '',
+          currency: v.currency || 'uzs',
+          unit: v.unit || 'dona',
+        })) || [],
       });
     }
   }, [singleProduct, showEditModal]);
@@ -341,13 +557,23 @@ const Warehouse = () => {
     const payload = {
       name: formData.name,
       category: formData.category ? parseInt(formData.category) : null,
-      quantity: parseInt(formData.quantity) || 0,
-      sale_price: formData.sale_price || '0',
-      currency: formData.currency,
-      unit: formData.unit,
+      is_active: formData.is_active !== undefined ? formData.is_active : true,
     };
-    if (parseFloat(formData.cost_price) > 0) {
-      payload.cost_price = formData.cost_price;
+    if (formData.description) {
+      payload.description = formData.description;
+    }
+    if (formData.variants && formData.variants.length > 0) {
+      payload.variants = formData.variants.map(v => ({
+        ...(v.id ? { id: v.id } : {}),
+        name: v.name || '',
+        barcode: v.barcode || '',
+        cost_price: v.cost_price || '0',
+        sale_price: v.sale_price || '0',
+        currency: v.currency || 'uzs',
+        quantity: parseInt(v.quantity) || 0,
+        unit: v.unit || 'dona',
+        is_active: true
+      }));
     }
     return payload;
   };
@@ -381,11 +607,19 @@ const Warehouse = () => {
     setFormData({
       name: product.name || '',
       category: product.category?.toString() || '',
-      quantity: product.quantity?.toString() || '0',
-      sale_price: product.sale_price || '',
-      cost_price: product.cost_price || '',
-      currency: product.currency || 'uzs',
-      unit: product.unit || 'dona',
+      description: product.description || '',
+      image: product.image || 'string',
+      is_active: product.is_active !== undefined ? product.is_active : true,
+      variants: product.variants?.map(v => ({
+        id: v.id,
+        name: v.name || '',
+        barcode: v.barcode || '',
+        quantity: v.quantity || '',
+        sale_price: v.sale_price || '',
+        cost_price: v.cost_price || '',
+        currency: v.currency || 'uzs',
+        unit: v.unit || 'dona',
+      })) || [],
     });
     setShowEditModal(true);
   };
@@ -396,7 +630,7 @@ const Warehouse = () => {
   };
 
   const resetForm = () => {
-    setFormData({ name: '', category: '', quantity: '', sale_price: '', cost_price: '', currency: 'uzs', unit: 'dona' });
+    setFormData({ name: '', category: '', description: '', image: 'string', is_active: true, variants: [] });
     setSelectedProduct(null);
   };
 
@@ -745,7 +979,7 @@ const Warehouse = () => {
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <ProductForm formData={formData} setFormData={setFormData} categories={categories} onSubmit={handleAddProduct} submitLabel="Saqlash" isPending={createProductMutation.isPending} />
+            <ProductForm formData={formData} setFormData={setFormData} categories={categories} onSubmit={handleAddProduct} submitLabel="Saqlash" isPending={createProductMutation.isPending} onDeleteVariant={(id) => deleteVariantMutation.mutateAsync(id)} />
           </div>
         </div>
       )}
@@ -766,7 +1000,7 @@ const Warehouse = () => {
                 <p className="text-sm">Ma'lumotlar yuklanmoqda...</p>
               </div>
             ) : (
-              <ProductForm formData={formData} setFormData={setFormData} categories={categories} onSubmit={handleEditProduct} submitLabel="Yangilash" isPending={updateProductMutation.isPending} />
+              <ProductForm formData={formData} setFormData={setFormData} categories={categories} onSubmit={handleEditProduct} submitLabel="Yangilash" isPending={updateProductMutation.isPending} onDeleteVariant={(id) => deleteVariantMutation.mutateAsync(id)} />
             )}
           </div>
         </div>
