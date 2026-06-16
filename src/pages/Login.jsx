@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiPhone, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
+import { Phone, LockKey, Eye, EyeSlash } from '@phosphor-icons/react';
 import { useAuth } from '../context/AuthContext';
 import { formatPhoneNumber, cleanPhoneNumber } from '../utils/phoneFormat';
 
@@ -83,10 +83,10 @@ const Login = () => {
   // Removed local formatPhoneNumber as we use the utility one
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-white relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-50 to-white relative overflow-hidden">
       {/* Decorative blurred shapes */}
-      <div className="absolute top-0 left-0 w-64 h-64 bg-blue-200 rounded-full blur-3xl opacity-30 -translate-x-1/2 -translate-y-1/2" />
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-200 rounded-full blur-3xl opacity-30 translate-x-1/3 translate-y-1/3" />
+      <div className="absolute top-0 left-0 w-64 h-64 bg-slate-200 rounded-full blur-3xl opacity-30 -translate-x-1/2 -translate-y-1/2" />
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-slate-200 rounded-full blur-3xl opacity-30 translate-x-1/3 translate-y-1/3" />
       
       {/* Main content */}
       <div className="relative z-10 min-h-screen flex flex-col justify-center px-6 py-12">
@@ -95,15 +95,15 @@ const Login = () => {
           {/* Header Section */}
           <div className="text-center mb-10">
             {/* Logo */}
-            <div className="w-20 h-20 bg-blue-600 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg">
+            <div className="w-20 h-20 bg-indigo-600 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg">
               <span className="text-4xl font-bold text-white">B</span>
             </div>
             
             {/* App name */}
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">BiCRM</h1>
+            <h1 className="text-3xl font-bold text-slate-900 mb-2">BiCRM</h1>
             
             {/* Tagline */}
-            <p className="text-sm text-gray-600">Biznesingizni oson va tez boshqaring</p>
+            <p className="text-sm text-slate-600">Biznesingizni oson va tez boshqaring</p>
           </div>
 
           {/* Form Section */}
@@ -113,7 +113,7 @@ const Login = () => {
             <div>
               <div className={`relative transition-all duration-300 ${errors.phone ? 'transform scale-105' : ''}`}>
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <FiPhone className={`w-5 h-5 ${errors.phone ? 'text-blue-500' : 'text-gray-400'} transition-colors`} />
+                  <Phone className={`w-5 h-5 ${errors.phone ? 'text-indigo-500' : 'text-slate-400'} transition-colors`} />
                 </div>
                 <input
                   type="tel"
@@ -125,15 +125,15 @@ const Login = () => {
                     if (errors.phone) setErrors(prev => ({ ...prev, phone: '' }));
                   }}
                   placeholder="+998 XX XXX XX XX"
-                  className={`block w-full pl-12 pr-4 py-3.5 bg-white border rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 ${
+                  className={`block w-full pl-12 pr-4 py-3.5 bg-white border rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 ${
                     errors.phone 
-                      ? 'border-blue-500 focus:ring-blue-500' 
-                      : 'border-gray-200 hover:border-gray-300'
+                      ? 'border-indigo-500 focus:ring-indigo-500' 
+                      : 'border-slate-200 hover:border-slate-300'
                   }`}
                 />
               </div>
               {errors.phone && (
-                <p className="mt-2 text-sm text-blue-600">{errors.phone}</p>
+                <p className="mt-2 text-sm text-indigo-600">{errors.phone}</p>
               )}
             </div>
 
@@ -141,7 +141,7 @@ const Login = () => {
             <div>
               <div className={`relative transition-all duration-300 ${errors.password ? 'transform scale-105' : ''}`}>
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <FiLock className={`w-5 h-5 ${errors.password ? 'text-blue-500' : 'text-gray-400'} transition-colors`} />
+                  <LockKey className={`w-5 h-5 ${errors.password ? 'text-indigo-500' : 'text-slate-400'} transition-colors`} />
                 </div>
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -149,22 +149,22 @@ const Login = () => {
                   value={formData.password}
                   onChange={handleInputChange}
                   placeholder="Parol"
-                  className={`block w-full pl-12 pr-12 py-3.5 bg-white border rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 ${
+                  className={`block w-full pl-12 pr-12 py-3.5 bg-white border rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 ${
                     errors.password 
-                      ? 'border-blue-500 focus:ring-blue-500' 
-                      : 'border-gray-200 hover:border-gray-300'
+                      ? 'border-indigo-500 focus:ring-indigo-500' 
+                      : 'border-slate-200 hover:border-slate-300'
                   }`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
                 >
-                  {showPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
+                  {showPassword ? <EyeSlash className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
               {errors.password && (
-                <p className="mt-2 text-sm text-blue-600">{errors.password}</p>
+                <p className="mt-2 text-sm text-indigo-600">{errors.password}</p>
               )}
             </div>
 
@@ -173,16 +173,16 @@ const Login = () => {
               <label className="flex items-center">
                 <input
                   type="checkbox"
-                  className="w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  className="w-4 h-4 text-indigo-600 bg-white border-slate-300 rounded focus:ring-indigo-500 focus:ring-2"
                 />
-                <span className="ml-2 text-sm text-gray-600">Eslab qolish</span>
+                <span className="ml-2 text-sm text-slate-600">Eslab qolish</span>
               </label>
             </div>
 
             {/* General Error */}
             {errors.general && (
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-center">
-                <p className="text-sm text-blue-600">{errors.general}</p>
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center">
+                <p className="text-sm text-indigo-600">{errors.general}</p>
               </div>
             )}
 
@@ -190,7 +190,7 @@ const Login = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3.5 px-4 bg-gradient-to-r from-blue-600 to-blue-600 text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl transform transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className="w-full py-3.5 px-4 bg-gradient-to-r from-indigo-600 to-indigo-600 text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl transform transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               {isLoading ? (
                 <div className="flex items-center justify-center">
