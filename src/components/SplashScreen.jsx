@@ -38,7 +38,7 @@ const SplashScreen = ({ onDone }) => {
                 animate={{ x: ['-150%', '150%'] }}
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
               />
-              <span className="text-white text-3xl font-black tracking-tighter">SB</span>
+              <img src="/shaxrixon_balon_logo.png" alt="Shaxrixon Balon" className="w-full h-full object-cover relative z-10" />
             </motion.div>
 
             <h1 className="text-white text-4xl md:text-5xl font-black tracking-tight mb-2">
