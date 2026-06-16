@@ -49,7 +49,8 @@ const Home = () => {
 
   if (statsLoading || lowStockLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
+      <div className="min-h-screen flex flex-col items-center bg-[#f8fafc] pt-24 gap-8">
+        <p className="text-3xl md:text-4xl font-black text-[#6366f1] tracking-wide">Bismillah</p>
         <Spinner className="w-10 h-10 text-[#6366f1] animate-spin" />
       </div>
     );

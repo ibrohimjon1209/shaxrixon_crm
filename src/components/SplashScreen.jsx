@@ -19,6 +19,16 @@ const SplashScreen = ({ onDone }) => {
           transition={{ duration: 0.8, ease: "easeInOut" }}
           className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-indigo-600 overflow-hidden"
         >
+          {/* Bismillah — top */}
+          <motion.p
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="absolute top-10 text-white text-2xl md:text-3xl font-black tracking-wide z-10"
+          >
+            Bismillah
+          </motion.p>
+
           {/* Main Content */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -38,7 +48,7 @@ const SplashScreen = ({ onDone }) => {
                 animate={{ x: ['-150%', '150%'] }}
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
               />
-              <span className="text-white text-3xl font-black tracking-tighter">SB</span>
+              <img src="/shaxrixon_balon_logo.png" alt="Shaxrixon Balon" className="w-full h-full object-cover relative z-10" />
             </motion.div>
 
             <h1 className="text-white text-4xl md:text-5xl font-black tracking-tight mb-2">

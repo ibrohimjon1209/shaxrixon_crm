@@ -43,7 +43,7 @@ api.interceptors.response.use(
     const isAuthEndpoint = originalRequest.url.includes('/api/auth/login/') || originalRequest.url.includes('/api/auth/logout/') || originalRequest.url.includes('/api/auth/refresh/');
     if (response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       originalRequest._retry = true;
-      
+
       try {
         const refresh = getRefreshToken();
         if (!refresh) {

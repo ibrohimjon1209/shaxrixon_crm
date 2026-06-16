@@ -31,7 +31,8 @@ const ProtectedRoute = ({ children }) => {
   
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex flex-col items-center bg-slate-50 pt-24 gap-8">
+        <p className="text-3xl md:text-4xl font-black text-indigo-600 tracking-wide">Bismillah</p>
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
       </div>
     );
