@@ -517,7 +517,8 @@ const Warehouse = () => {
   const categories = categoriesData?.results || [];
   const totalProductPages = productsData?.count ? Math.ceil(productsData.count / 20) : 1;
 
-  const totalProductCount = productsData?.count ?? products.length;
+  // Qidiruv shartiga qarab mahsulotlar soni o'zgaradi, lekin jami mahsulotlar soni doim barcha mahsulotlarni ko'rsatadi
+  const totalProductCount = allPagesData?.count ?? productsData?.count ?? products.length;
   const lowStockRaw = lowStockData?.results || lowStockData || [];
   const lowStockCount = Array.isArray(lowStockRaw) ? lowStockRaw.length : 0;
 
@@ -985,7 +986,7 @@ const Warehouse = () => {
       {showAddModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-end" onClick={() => { setShowAddModal(false); resetForm(); }}>
           <div className="bg-white rounded-t-3xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 bg-white border-b border-slate-100 px-5 py-4 flex items-center justify-between">
+            <div className="sticky top-0 bg-white border-b border-slate-100 px-5 py-4 flex items-center justify-between z-50">
               <h2 className="text-lg font-bold text-slate-900">Mahsulot qo'shish</h2>
               <button onClick={() => { setShowAddModal(false); resetForm(); }} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500">
                 <X className="w-4 h-4" />
@@ -1000,7 +1001,7 @@ const Warehouse = () => {
       {showEditModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-end" onClick={() => { setShowEditModal(false); resetForm(); }}>
           <div className="bg-white rounded-t-3xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 bg-white border-b border-slate-100 px-5 py-4 flex items-center justify-between">
+            <div className="sticky top-0 bg-white border-b border-slate-100 px-5 py-4 flex items-center justify-between z-50">
               <h2 className="text-lg font-bold text-slate-900">Mahsulotni tahrirlash</h2>
               <button onClick={() => { setShowEditModal(false); resetForm(); }} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500">
                 <X className="w-4 h-4" />
