@@ -9,7 +9,18 @@ import { useCustomers, useCreateCustomer } from '../hooks/useCustomers';
 import { useCreateSale, useSales, useSale, useUpdateSale, useDeleteSale } from '../hooks/useSales';
 import { toast } from 'react-toastify';
 import { AddEditCustomerModal } from './Customers';
-import { AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const modalVariants = {
+  hidden: { opacity: 0, scale: 0.95, y: 15 },
+  visible: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.15, ease: 'easeOut' } },
+  exit: { opacity: 0, scale: 0.95, y: 15, transition: { duration: 0.15, ease: 'easeIn' } }
+};
+const backdropVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.15 } },
+  exit: { opacity: 0, transition: { duration: 0.15 } }
+};
 
 const ITEM_H = 52;
 const UZ_MONTHS = ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr'];
@@ -175,6 +186,10 @@ const Sales = () => {
   const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
   const [editSaleData, setEditSaleData] = useState({ payment_method: 'cash', note: '', debt_due_date: '' });
 
+  // Variants
+  const [showVariantModal, setShowVariantModal] = useState(false);
+  const [selectedProductForVariants, setSelectedProductForVariants] = useState(null);
+
   useEffect(() => {
     fetch('https://open.er-api.com/v6/latest/USD')
       .then(r => r.json())
@@ -216,34 +231,50 @@ const Sales = () => {
   const totalProductPages = productsData?.count ? Math.ceil(productsData.count / 20) : 1;
   const customers = customersData?.results || [];
 
-  const addToCart = (product) => {
-    if (product.quantity <= 0) {
+  const handleProductClick = (product) => {
+    if (product.has_variants && product.variants?.length > 0) {
+      setSelectedProductForVariants(product);
+      setShowVariantModal(true);
+    } else {
+      addToCart(product, null);
+    }
+  };
+
+  const addToCart = (product, variant = null) => {
+    const qty = variant ? variant.quantity : product.quantity;
+    if (qty <= 0) {
       toast.warning('Mahsulot omborda qolmagan');
       return;
     }
-    const existingItem = cart.find(item => item.id === product.id);
+    const cartId = variant ? `v-${variant.id}` : `p-${product.id}`;
+    const existingItem = cart.find(item => item.cartId === cartId);
+    
     if (existingItem) {
       const currentQty = parseInt(existingItem.quantity, 10) || 0;
-      if (currentQty < product.quantity) {
+      if (currentQty < qty) {
         setCart(cart.map(item =>
-          item.id === product.id ? { ...item, quantity: currentQty + 1 } : item
+          item.cartId === cartId ? { ...item, quantity: currentQty + 1 } : item
         ));
       } else {
         toast.warning('Ombordagi miqdordan ko\'p sotib olib bo\'lmaydi');
       }
     } else {
-      const isUzs = product.currency === 'uzs';
-      const priceUzs = isUzs ? parseFloat(product.sale_price || 0) : 0;
-      const priceUsd = !isUzs ? parseFloat(product.sale_price || 0) : 0;
+      const isUzs = variant ? (variant.currency === 'uzs') : (product.currency === 'uzs');
+      const salePrice = variant ? parseFloat(variant.sale_price || 0) : parseFloat(product.sale_price || 0);
+      const priceUzs = isUzs ? salePrice : 0;
+      const priceUsd = !isUzs ? salePrice : 0;
       const newItem = {
-        id: product.id,
-        name: product.name,
-        price: isUzs ? priceUzs : priceUsd,
+        cartId,
+        id: cartId, // for react keys and internal logic
+        productId: product.id,
+        variantId: variant ? variant.id : null,
+        name: variant ? `${product.name} (${variant.name})` : product.name,
+        price: salePrice,
         price_uzs: priceUzs,
         price_usd: priceUsd,
         currency: isUzs ? 'UZS' : 'USD',
         quantity: 1,
-        maxQuantity: product.quantity
+        maxQuantity: qty
       };
       const newCart = [...cart, newItem];
       const newHasUzs = newCart.some(i => i.price_uzs > 0);
@@ -251,6 +282,7 @@ const Sales = () => {
       if (newHasUzs && !newHasUsd) setSelectedCurrency('UZS');
       else if (!newHasUzs && newHasUsd) setSelectedCurrency('USD');
       setCart(newCart);
+      if (variant) setShowVariantModal(false);
     }
   };
 
@@ -330,7 +362,8 @@ const Sales = () => {
         const basePrice = isUsdItem ? item.price_usd : item.price_uzs;
         const scale = paymentType === 'debt' ? 1 : (isUsdItem ? usdScale : uzsScale);
         return {
-          product: item.id,
+          product: item.productId,
+          ...(item.variantId ? { variant: item.variantId } : {}),
           quantity: item.quantity,
           price: (basePrice * scale).toFixed(2),
           currency: isUsdItem ? 'usd' : 'uzs',
@@ -385,124 +418,7 @@ const Sales = () => {
     return new Date(dateStr).toLocaleString('uz-UZ');
   };
 
-  // Completion modal
-  if (showCompletion) {
-    return (
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center px-4">
-        <div className="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl">
-          <div className="text-center">
-            <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-5">
-              <Check className="w-10 h-10 text-emerald-500" />
-            </div>
-            <div className="mb-1 space-y-0.5">
-              {saleAmounts.uzs === 0 && saleAmounts.usd === 0 ? (
-                <p className="text-2xl font-black text-orange-500">Nasiya</p>
-              ) : (
-                <>
-                  {saleAmounts.usd > 0 && (
-                    <p className="text-2xl font-black text-emerald-600">${saleAmounts.usd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                  )}
-                  {saleAmounts.uzs > 0 && (
-                    <p className="text-2xl font-black text-[#6366f1]">{saleAmounts.uzs.toLocaleString()} so'm</p>
-                  )}
-                </>
-              )}
-            </div>
-            <p className="text-slate-400 text-sm mb-6">Sotuv muvaffaqiyatli yakunlandi</p>
-            <div className="space-y-3">
-              <button
-                onClick={handleViewReceipt}
-                className="w-full py-3.5 bg-[#6366f1] text-white rounded-2xl font-bold hover:bg-blue-700 transition-colors"
-              >
-                Chekni ko'rish
-              </button>
-              <button
-                onClick={handleNewSale}
-                className="w-full py-3.5 bg-slate-100 text-slate-700 rounded-2xl font-semibold hover:bg-slate-200 transition-colors"
-              >
-                Yangi sotuv
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Receipt modal
-  if (showReceipt) {
-    return (
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center px-4">
-        <div className="bg-white rounded-3xl p-6 w-full max-w-md max-h-[85vh] overflow-y-auto shadow-2xl">
-          <div className="flex items-center justify-between mb-5">
-            <button onClick={handleNewSale} className="w-9 h-9 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600">
-              <ArrowLeft className="w-4 h-4" />
-            </button>
-            <h2 className="text-lg font-bold text-slate-900">Chek #{lastCreatedSale?.id}</h2>
-            <div className="w-9" />
-          </div>
-
-          <div className="text-center mb-5">
-            <h3 className="text-base font-bold text-slate-900">BalonCRM Sotuv cheki</h3>
-            <p className="text-xs text-slate-400 mt-1">{formatDateTime(lastCreatedSale?.created_at)}</p>
-            <p className="text-xs text-slate-500 mt-0.5">Mijoz: {lastCreatedSale?.customer_name}</p>
-          </div>
-
-          <div className="mb-5 space-y-2">
-            <div className="grid grid-cols-4 gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest pb-2 border-b border-slate-100">
-              <div>Mahsulot</div>
-              <div className="text-center">Miqdor</div>
-              <div className="text-center">Narx</div>
-              <div className="text-right">Jami</div>
-            </div>
-            {lastCreatedSale?.items?.map((item) => {
-              const price = parseFloat(item.price || 0);
-              const isUsd = item.currency === 'usd';
-              const fmt = (v) => isUsd
-                ? `$${v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                : `${v.toLocaleString()} so'm`;
-              return (
-                <div key={item.id} className="grid grid-cols-4 gap-2 py-1.5 border-b border-slate-50 last:border-0">
-                  <div className="font-medium text-slate-900 text-xs truncate">{item.product_name}</div>
-                  <div className="text-center text-slate-500 text-xs">{item.quantity}</div>
-                  <div className={`text-center text-xs font-semibold ${isUsd ? 'text-emerald-600' : 'text-[#6366f1]'}`}>{fmt(price)}</div>
-                  <div className={`text-right font-bold text-xs ${isUsd ? 'text-emerald-600' : 'text-[#6366f1]'}`}>{fmt(price * item.quantity)}</div>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="border-t border-dashed border-slate-200 pt-4 space-y-2 mb-5">
-            {lastCreatedSale?.payment_method !== 'debt' && (
-              <>
-                <div className="flex justify-between font-bold text-slate-900">
-                  <span>Jami:</span>
-                  <div className="text-right space-y-0.5">
-                    {saleAmounts.uzs > 0 && <p className="text-[#6366f1]">{saleAmounts.uzs.toLocaleString()} so'm</p>}
-                    {saleAmounts.usd > 0 && <p className="text-emerald-600">${saleAmounts.usd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>}
-                  </div>
-                </div>
-                <div className="flex justify-between text-sm text-slate-500">
-                  <span>To'landi:</span>
-                  <div className="text-right space-y-0.5">
-                    {saleAmounts.uzs > 0 && <p>{saleAmounts.uzs.toLocaleString()} so'm</p>}
-                    {saleAmounts.usd > 0 && <p>${saleAmounts.usd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>}
-                  </div>
-                </div>
-              </>
-            )}
-            {parseFloat(lastCreatedSale?.debt_amount || 0) > 0 && (
-              <div className="flex justify-between text-sm font-bold text-red-500">
-                <span>Qarz:</span>
-                <span>{parseFloat(lastCreatedSale.debt_amount).toLocaleString()} so'm</span>
-              </div>
-            )}
-          </div>
-
-        </div>
-      </div>
-    );
-  }
+  // Removed early returns for completion and receipt modals, moved to AnimatePresence below.
 
   return (
     <div className="min-h-screen bg-[#f8fafc] pb-32">
@@ -562,8 +478,8 @@ const Sales = () => {
               return (
                 <div
                   key={product.id}
-                  onClick={() => addToCart(product)}
-                  className={`${isHighPrice ? 'col-span-2' : ''} group cursor-pointer bg-white rounded-2xl p-3 border transition-all duration-200 ${product.quantity <= 0
+                  onClick={() => handleProductClick(product)}
+                  className={`${isHighPrice ? 'col-span-2' : ''} group cursor-pointer bg-white rounded-2xl p-3 border transition-all duration-200 ${(product.total_quantity ?? product.quantity) <= 0
                     ? 'opacity-50 grayscale border-slate-100'
                     : 'border-slate-100 hover:border-[#6366f1] hover:shadow-md active:scale-95'
                     }`}
@@ -572,27 +488,35 @@ const Sales = () => {
                     <div className="w-8 h-8 bg-slate-50 rounded-xl flex items-center justify-center">
                       <Package className="w-4 h-4 text-[#6366f1]" />
                     </div>
-                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-lg ${product.quantity <= 0 ? 'bg-red-50 text-red-500' : 'bg-emerald-50 text-emerald-600'
+                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-lg ${(product.total_quantity ?? product.quantity) <= 0 ? 'bg-red-50 text-red-500' : 'bg-emerald-50 text-emerald-600'
                       }`}>
-                      {product.quantity <= 0 ? 'Yo\'q' : `${product.quantity} ${product.unit}`}
+                      {(product.total_quantity ?? product.quantity) <= 0 ? 'Yo\'q' : `${product.total_quantity ?? product.quantity} ${product.has_variants ? 'jami' : product.unit}`}
                     </span>
                   </div>
                   <h4 className="font-semibold text-slate-800 text-xs mb-1.5 truncate leading-tight">{product.name}</h4>
                   <div className="flex items-center justify-between">
                     <div className="flex flex-col gap-0.5">
-                      {priceUzs > 0 && (
-                        <p className="text-[#6366f1] font-bold text-xs leading-tight">
-                          {priceUzs.toLocaleString()} so'm
+                      {product.has_variants ? (
+                        <p className="text-slate-500 font-bold text-[10px] leading-tight">
+                          {product.variant_count} ta variant
                         </p>
-                      )}
-                      {priceUsd > 0 && (
-                        <p className="text-emerald-600 font-bold text-xs leading-tight">
-                          ${priceUsd.toLocaleString()}
-                        </p>
+                      ) : (
+                        <>
+                          {priceUzs > 0 && (
+                            <p className="text-[#6366f1] font-bold text-xs leading-tight">
+                              {priceUzs.toLocaleString()} so'm
+                            </p>
+                          )}
+                          {priceUsd > 0 && (
+                            <p className="text-emerald-600 font-bold text-xs leading-tight">
+                              ${priceUsd.toLocaleString()}
+                            </p>
+                          )}
+                        </>
                       )}
                     </div>
                     <div className="w-6 h-6 bg-slate-50 text-[#6366f1] rounded-lg flex items-center justify-center group-hover:bg-[#6366f1] group-hover:text-white transition-colors">
-                      <Plus className="w-3 h-3" />
+                      {product.has_variants ? <CaretRight className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
                     </div>
                   </div>
                 </div>
@@ -1174,6 +1098,198 @@ const Sales = () => {
             }}
             isPending={createCustomerMutation.isPending}
           />
+        )}
+      </AnimatePresence>
+      {/* Variant Selection Modal */}
+      <AnimatePresence>
+        {showVariantModal && selectedProductForVariants && (
+          <motion.div 
+            variants={backdropVariants} initial="hidden" animate="visible" exit="exit"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-end" 
+            onClick={() => setShowVariantModal(false)}
+          >
+            <motion.div 
+              variants={modalVariants} initial="hidden" animate="visible" exit="exit"
+              className="bg-white rounded-t-3xl w-full max-h-[90vh] overflow-hidden flex flex-col origin-bottom" 
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900">{selectedProductForVariants.name}</h2>
+                  <p className="text-xs text-slate-400 mt-0.5">Variantni tanlang</p>
+                </div>
+                <button onClick={() => setShowVariantModal(false)} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-200">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="p-4 overflow-y-auto space-y-2">
+                {selectedProductForVariants.variants?.map((variant) => {
+                  const isUsd = (variant.currency || 'uzs').toLowerCase() === 'usd';
+                  const price = parseFloat(variant.sale_price || 0);
+                  const outOfStock = variant.quantity <= 0;
+                  return (
+                    <div
+                      key={variant.id}
+                      onClick={() => !outOfStock && addToCart(selectedProductForVariants, variant)}
+                      className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${
+                        outOfStock 
+                          ? 'opacity-50 border-slate-100 bg-slate-50 cursor-not-allowed' 
+                          : 'border-slate-100 hover:border-[#6366f1] bg-white cursor-pointer hover:shadow-sm'
+                      }`}
+                    >
+                      <div className="min-w-0 pr-3">
+                        <h4 className="font-bold text-slate-800 text-sm truncate">{variant.name}</h4>
+                        {variant.barcode && <p className="text-[10px] text-slate-400 mt-0.5">{variant.barcode}</p>}
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className={`text-[10px] font-bold ${isUsd ? 'text-emerald-600' : 'text-[#6366f1]'}`}>
+                            {isUsd ? `$${price.toLocaleString()}` : `${price.toLocaleString()} so'm`}
+                          </span>
+                          <span className="text-[10px] text-slate-300">•</span>
+                          <span className="text-[10px] font-semibold text-slate-500">Qoldiq: {variant.quantity} {variant.unit}</span>
+                        </div>
+                      </div>
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                        outOfStock ? 'bg-slate-100 text-slate-400' : 'bg-indigo-50 text-[#6366f1]'
+                      }`}>
+                        <Plus className="w-4 h-4" />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {/* Completion modal */}
+        {showCompletion && (
+          <motion.div 
+            variants={backdropVariants} initial="hidden" animate="visible" exit="exit"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center px-4"
+          >
+            <motion.div 
+              variants={modalVariants} initial="hidden" animate="visible" exit="exit"
+              className="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl"
+            >
+              <div className="text-center">
+                <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-5">
+                  <Check className="w-10 h-10 text-emerald-500" />
+                </div>
+                <div className="mb-1 space-y-0.5">
+                  {saleAmounts.uzs === 0 && saleAmounts.usd === 0 ? (
+                    <p className="text-2xl font-black text-orange-500">Nasiya</p>
+                  ) : (
+                    <>
+                      {saleAmounts.usd > 0 && (
+                        <p className="text-2xl font-black text-emerald-600">${saleAmounts.usd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                      )}
+                      {saleAmounts.uzs > 0 && (
+                        <p className="text-2xl font-black text-[#6366f1]">{saleAmounts.uzs.toLocaleString()} so'm</p>
+                      )}
+                    </>
+                  )}
+                </div>
+                <p className="text-slate-400 text-sm mb-6">Sotuv muvaffaqiyatli yakunlandi</p>
+                <div className="space-y-3">
+                  <button
+                    onClick={handleViewReceipt}
+                    className="w-full py-3.5 bg-[#6366f1] text-white rounded-2xl font-bold hover:bg-blue-700 transition-colors"
+                  >
+                    Chekni ko'rish
+                  </button>
+                  <button
+                    onClick={handleNewSale}
+                    className="w-full py-3.5 bg-slate-100 text-slate-700 rounded-2xl font-semibold hover:bg-slate-200 transition-colors"
+                  >
+                    Yangi sotuv
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {/* Receipt modal */}
+        {showReceipt && (
+          <motion.div 
+            variants={backdropVariants} initial="hidden" animate="visible" exit="exit"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center px-4"
+          >
+            <motion.div 
+              variants={modalVariants} initial="hidden" animate="visible" exit="exit"
+              className="bg-white rounded-3xl p-6 w-full max-w-md max-h-[85vh] overflow-y-auto shadow-2xl"
+            >
+              <div className="flex items-center justify-between mb-5">
+                <button onClick={handleNewSale} className="w-9 h-9 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600">
+                  <ArrowLeft className="w-4 h-4" />
+                </button>
+                <h2 className="text-lg font-bold text-slate-900">Chek #{lastCreatedSale?.id}</h2>
+                <div className="w-9" />
+              </div>
+
+              <div className="text-center mb-5">
+                <h3 className="text-base font-bold text-slate-900">BalonCRM Sotuv cheki</h3>
+                <p className="text-xs text-slate-400 mt-1">{formatDateTime(lastCreatedSale?.created_at)}</p>
+                <p className="text-xs text-slate-500 mt-0.5">Mijoz: {lastCreatedSale?.customer_name}</p>
+              </div>
+
+              <div className="mb-5 space-y-2">
+                <div className="grid grid-cols-4 gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest pb-2 border-b border-slate-100">
+                  <div>Mahsulot</div>
+                  <div className="text-center">Miqdor</div>
+                  <div className="text-center">Narx</div>
+                  <div className="text-right">Jami</div>
+                </div>
+                {lastCreatedSale?.items?.map((item) => {
+                  const price = parseFloat(item.price || 0);
+                  const isUsd = item.currency === 'usd';
+                  const fmt = (v) => isUsd
+                    ? `$${v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                    : `${v.toLocaleString()} so'm`;
+                  return (
+                    <div key={item.id} className="grid grid-cols-4 gap-2 py-1.5 border-b border-slate-50 last:border-0">
+                      <div className="font-medium text-slate-900 text-xs truncate">{item.product_name}</div>
+                      <div className="text-center text-slate-500 text-xs">{item.quantity}</div>
+                      <div className={`text-center text-xs font-semibold ${isUsd ? 'text-emerald-600' : 'text-[#6366f1]'}`}>{fmt(price)}</div>
+                      <div className={`text-right font-bold text-xs ${isUsd ? 'text-emerald-600' : 'text-[#6366f1]'}`}>{fmt(price * item.quantity)}</div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="border-t border-dashed border-slate-200 pt-4 space-y-2 mb-5">
+                {lastCreatedSale?.payment_method !== 'debt' && (
+                  <>
+                    <div className="flex justify-between font-bold text-slate-900">
+                      <span>Jami:</span>
+                      <div className="text-right space-y-0.5">
+                        {saleAmounts.uzs > 0 && <p className="text-[#6366f1]">{saleAmounts.uzs.toLocaleString()} so'm</p>}
+                        {saleAmounts.usd > 0 && <p className="text-emerald-600">${saleAmounts.usd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>}
+                      </div>
+                    </div>
+                    <div className="flex justify-between text-sm text-slate-500">
+                      <span>To'landi:</span>
+                      <div className="text-right space-y-0.5">
+                        {saleAmounts.uzs > 0 && <p>{saleAmounts.uzs.toLocaleString()} so'm</p>}
+                        {saleAmounts.usd > 0 && <p>${saleAmounts.usd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>}
+                      </div>
+                    </div>
+                  </>
+                )}
+                {parseFloat(lastCreatedSale?.debt_amount || 0) > 0 && (
+                  <div className="flex justify-between text-sm font-bold text-red-500">
+                    <span>Qarz:</span>
+                    <span>{parseFloat(lastCreatedSale.debt_amount).toLocaleString()} so'm</span>
+                  </div>
+                )}
+              </div>
+
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

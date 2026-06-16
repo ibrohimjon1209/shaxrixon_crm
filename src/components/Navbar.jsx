@@ -22,7 +22,9 @@ const Navbar = () => {
       <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-60 flex-col bg-white border-r border-slate-100 shadow-sm z-50">
         {/* Logo */}
         <div className="px-6 py-6 border-b border-slate-50 flex items-center gap-3">
-          <img src="/person_logo.jpg" alt="logo" className="w-8 h-8 object-cover rounded-full" />
+          <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-xl flex items-center justify-center shadow-md shadow-indigo-500/30 shrink-0">
+            <span className="text-white text-sm font-black tracking-tighter">SB</span>
+          </div>
           <div>
             <h1 className="text-lg font-black text-[#6366f1] tracking-tight">Shaxrixon Balon</h1>
             <p className="text-[11px] text-slate-400 mt-0.5">CRM Tizimi</p>

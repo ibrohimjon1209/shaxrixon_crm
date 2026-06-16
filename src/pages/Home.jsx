@@ -9,9 +9,11 @@ import { useDashboardStats } from '../hooks/useReports';
 import { useLowStockProducts, useProducts } from '../hooks/useProducts';
 import { useSales, useOverdueSales } from '../hooks/useSales';
 import { useDebtors } from '../hooks/useCustomers';
+import { useCurrentUser } from '../hooks/useAuth';
 
 const Home = () => {
   const navigate = useNavigate();
+  const { data: currentUser } = useCurrentUser();
   const { data: stats, isLoading: statsLoading } = useDashboardStats('today');
   const { data: lowStockProducts = [], isLoading: lowStockLoading } = useLowStockProducts();
   const { data: productsData } = useProducts({});
@@ -130,9 +132,14 @@ const Home = () => {
 
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-between items-center mb-6 relative z-10">
-            <div>
-              <h1 className="text-white text-xl md:text-2xl font-bold leading-tight">Xush kelibsiz!</h1>
-              <p className="text-slate-200 text-xs mt-0.5 capitalize">{today}</p>
+            <div className="min-w-0 pr-4">
+              <p className="text-slate-200 text-sm md:text-base font-medium leading-tight">
+                Xush kelibsiz,
+              </p>
+              <h1 className="text-white text-xl md:text-2xl font-bold leading-tight truncate mt-0.5">
+                {currentUser?.full_name || 'Foydalanuvchi'}!
+              </h1>
+              <p className="text-slate-300 text-xs mt-1.5 capitalize">{today}</p>
             </div>
             <button
               onClick={() => navigate('/notification')}
@@ -235,20 +242,31 @@ const Home = () => {
               <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
                 <h2 className="text-sm font-bold text-slate-700 mb-3">So'nggi sotuvlar</h2>
                 <div className="space-y-2">
-                  {recentSales.map((sale) => (
-                    <div key={sale.id} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-slate-50 rounded-full flex items-center justify-center font-bold text-[#6366f1] text-xs shrink-0">
-                          {sale.customer_name?.charAt(0) || 'M'}
+                  {recentSales.map((sale) => {
+                    const cName = sale.customer_name || "Noma'lum Xaridor";
+                    const initial = cName.charAt(0).toUpperCase();
+                    const usd = parseFloat(sale.total_usd || 0);
+                    const uzs = parseFloat(sale.total_uzs || 0);
+
+                    return (
+                      <div key={sale.id} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
+                        <div className="flex items-center gap-3 min-w-0 pr-3">
+                          <div className="w-8 h-8 bg-slate-50 rounded-full flex items-center justify-center font-bold text-[#6366f1] text-xs shrink-0">
+                            {initial}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-semibold text-slate-800 leading-tight truncate">{cName}</p>
+                            <p className="text-[10px] text-slate-400">{new Date(sale.created_at).toLocaleDateString()}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-xs font-semibold text-slate-800 leading-tight">{sale.customer_name}</p>
-                          <p className="text-[10px] text-slate-400">{new Date(sale.created_at).toLocaleDateString()}</p>
+                        <div className="text-right shrink-0 flex flex-col gap-0.5">
+                          {usd !== 0 && <p className="text-xs font-black text-emerald-600 leading-none">${usd.toLocaleString()}</p>}
+                          {uzs !== 0 && <p className="text-[11px] font-bold text-[#6366f1] leading-none">{uzs.toLocaleString()} so'm</p>}
+                          {usd === 0 && uzs === 0 && <p className="text-xs font-bold text-slate-400 leading-none">—</p>}
                         </div>
                       </div>
-                      <p className="text-xs font-bold text-slate-900 shrink-0">{parseFloat(sale.total || 0).toLocaleString()} so'm</p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
               </Link>

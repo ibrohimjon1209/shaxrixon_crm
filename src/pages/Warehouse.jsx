@@ -7,7 +7,8 @@ import {
 import {
   useProducts, useProduct, useCreateProduct, useUpdateProduct, useDeleteProduct,
   useCategories, useCreateCategory, useUpdateCategory, useDeleteCategory,
-  useLowStockProducts
+  useLowStockProducts,
+  useVariants, useCreateVariant, useUpdateVariant, useDeleteVariant
 } from '../hooks/useProducts';
 
 const inputClass = "w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1] transition-all";
@@ -107,6 +108,98 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, submitLabel,
   );
 };
 
+const VariantForm = ({ formData, setFormData, onSubmit, submitLabel, isPending }) => {
+  const isUzs = formData.currency === 'uzs';
+  const hasPrice = parseFloat(formData.sale_price || 0) > 0;
+  const symbol = isUzs ? "so'm" : '$';
+  const symbolClass = isUzs ? 'text-[#6366f1]' : 'text-emerald-600';
+
+  return (
+    <div className="p-4 space-y-4">
+      <div>
+        <label className="block text-xs font-semibold text-slate-500 mb-1.5">Variant nomi</label>
+        <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className={inputClass} placeholder="Masalan: Qizil, XL, yoki 1KG" />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs font-semibold text-slate-500 mb-1.5">Shtrix-kod</label>
+          <input type="text" value={formData.barcode} onChange={(e) => setFormData({ ...formData, barcode: e.target.value })} className={inputClass} placeholder="Shtrix-kod" />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-slate-500 mb-1.5">Birlik</label>
+          <select value={formData.unit} onChange={(e) => setFormData({ ...formData, unit: e.target.value })} className={inputClass}>
+            <option value="dona">Dona</option>
+            <option value="kg">Kg</option>
+            <option value="litr">Litr</option>
+            <option value="metr">Metr</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-xs font-semibold text-slate-500 mb-1.5">Miqdor</label>
+        <input type="number" value={formData.quantity} onChange={(e) => setFormData({ ...formData, quantity: e.target.value })} className={inputClass} placeholder="0" />
+      </div>
+
+      <div>
+        <label className="block text-xs font-semibold text-slate-500 mb-2">Valyuta</label>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => setFormData({ ...formData, currency: 'usd', sale_price: '', cost_price: '' })}
+            className={`py-2.5 rounded-xl font-bold text-sm transition-all ${!isUzs ? 'bg-emerald-500 text-white shadow-sm' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+          >
+            $ (USD)
+          </button>
+          <button
+            type="button"
+            onClick={() => setFormData({ ...formData, currency: 'uzs', sale_price: '', cost_price: '' })}
+            className={`py-2.5 rounded-xl font-bold text-sm transition-all ${isUzs ? 'bg-[#6366f1] text-white shadow-sm' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+          >
+            so'm (UZS)
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-xs font-semibold text-slate-500 mb-1.5">Tan narx</label>
+        <div className="relative">
+          <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold ${symbolClass}`}>{symbol}</span>
+          <input
+            type="number"
+            value={formData.cost_price}
+            onChange={(e) => setFormData({ ...formData, cost_price: e.target.value })}
+            className={inputClass + (isUzs ? ' pl-12' : ' pl-7')}
+            placeholder="0"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-xs font-semibold text-slate-500 mb-1.5">Sotuv narxi</label>
+        <div className="relative">
+          <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold ${symbolClass}`}>{symbol}</span>
+          <input
+            type="number"
+            value={formData.sale_price}
+            onChange={(e) => setFormData({ ...formData, sale_price: e.target.value })}
+            className={inputClass + (isUzs ? ' pl-12' : ' pl-7')}
+            placeholder="0"
+          />
+        </div>
+      </div>
+
+      <div className="flex gap-3 pt-2">
+        <button onClick={onSubmit} disabled={isPending || !formData.name || !hasPrice} className="flex-1 px-4 py-3.5 bg-[#6366f1] text-white rounded-2xl font-bold hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2">
+          {isPending && <Spinner className="animate-spin w-4 h-4" />}
+          {submitLabel}
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const statusConfig = {
   good: { label: 'Yaxshi', bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-500' },
   low: { label: 'Kam', bg: 'bg-amber-50', text: 'text-amber-700', dot: 'bg-amber-400' },
@@ -128,6 +221,22 @@ const Warehouse = () => {
   const [categoryToDelete, setCategoryToDelete] = useState(null);
   const [showCategoryStats, setShowCategoryStats] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
+
+  const [showAddVariantModal, setShowAddVariantModal] = useState(false);
+  const [showEditVariantModal, setShowEditVariantModal] = useState(false);
+  const [showDeleteVariantModal, setShowDeleteVariantModal] = useState(false);
+  const [selectedVariant, setSelectedVariant] = useState(null);
+  const [expandedProductId, setExpandedProductId] = useState(null);
+
+  const [variantFormData, setVariantFormData] = useState({
+    name: '',
+    barcode: '',
+    quantity: '',
+    sale_price: '',
+    cost_price: '',
+    currency: 'usd',
+    unit: 'dona',
+  });
 
   const [formData, setFormData] = useState({
     name: '',
@@ -167,6 +276,9 @@ const Warehouse = () => {
   const createCategoryMutation = useCreateCategory();
   const updateCategoryMutation = useUpdateCategory();
   const deleteCategoryMutation = useDeleteCategory();
+  const createVariantMutation = useCreateVariant();
+  const updateVariantMutation = useUpdateVariant();
+  const deleteVariantMutation = useDeleteVariant();
 
   const products = productsData?.results || [];
   const categories = categoriesData?.results || [];
@@ -326,6 +438,77 @@ const Warehouse = () => {
     }
   };
 
+  const buildVariantPayload = () => {
+    const payload = {
+      product: selectedProduct?.id,
+      name: variantFormData.name,
+      barcode: variantFormData.barcode,
+      quantity: parseInt(variantFormData.quantity) || 0,
+      sale_price: variantFormData.sale_price || '0',
+      currency: variantFormData.currency,
+      unit: variantFormData.unit,
+    };
+    if (parseFloat(variantFormData.cost_price) > 0) {
+      payload.cost_price = variantFormData.cost_price;
+    }
+    return payload;
+  };
+
+  const resetVariantForm = () => {
+    setVariantFormData({ name: '', barcode: '', quantity: '', sale_price: '', cost_price: '', currency: 'uzs', unit: 'dona' });
+    setSelectedVariant(null);
+  };
+
+  const handleAddVariant = async () => {
+    try {
+      await createVariantMutation.mutateAsync(buildVariantPayload());
+      setShowAddVariantModal(false);
+      resetVariantForm();
+    } catch (error) {}
+  };
+
+  const handleEditVariant = async () => {
+    try {
+      await updateVariantMutation.mutateAsync({ id: selectedVariant.id, data: buildVariantPayload() });
+      setShowEditVariantModal(false);
+      resetVariantForm();
+    } catch (error) {}
+  };
+
+  const handleDeleteVariant = async () => {
+    try {
+      await deleteVariantMutation.mutateAsync(selectedVariant.id);
+      setShowDeleteVariantModal(false);
+      setSelectedVariant(null);
+    } catch (error) {}
+  };
+
+  const openAddVariantModal = (product) => {
+    setSelectedProduct(product);
+    resetVariantForm();
+    setShowAddVariantModal(true);
+  };
+
+  const openEditVariantModal = (product, variant) => {
+    setSelectedProduct(product);
+    setSelectedVariant(variant);
+    setVariantFormData({
+      name: variant.name || '',
+      barcode: variant.barcode || '',
+      quantity: variant.quantity?.toString() || '0',
+      sale_price: variant.sale_price || '',
+      cost_price: variant.cost_price || '',
+      currency: variant.currency || 'uzs',
+      unit: variant.unit || 'dona',
+    });
+    setShowEditVariantModal(true);
+  };
+
+  const openDeleteVariantModal = (variant) => {
+    setSelectedVariant(variant);
+    setShowDeleteVariantModal(true);
+  };
+
   return (
     <div className="min-h-screen bg-[#f8fafc] pb-32 md:pb-8">
       {/* White header */}
@@ -422,15 +605,15 @@ const Warehouse = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
             {products.map((product) => {
               const sc = getStatusCfg(product.status);
-              const saleUzs = parseFloat(product.sale_price_uzs || (product.currency === 'uzs' ? product.sale_price : '') || 0);
-              const saleUsd = parseFloat(product.sale_price_usd || (product.currency === 'usd' ? product.sale_price : '') || 0);
+              const variants = product.variants || [];
+              const isExpanded = expandedProductId === product.id;
               return (
                 <div
                   key={product.id}
-                  className="bg-white rounded-2xl shadow-sm border border-slate-100 px-4 py-3.5 flex flex-col gap-2.5"
+                  className="bg-white rounded-2xl shadow-sm border border-slate-100 flex flex-col overflow-hidden"
                 >
                   {/* Top row: status dot + name + actions */}
-                  <div className="flex items-start gap-2.5">
+                  <div className="px-4 pt-3.5 pb-2.5 flex items-start gap-2.5">
                     <div className={`w-2.5 h-2.5 rounded-full shrink-0 mt-1.5 ${sc.dot}`} />
                     <h3 className="text-sm font-bold text-slate-900 flex-1 leading-snug">{product.name}</h3>
                     <div className="flex gap-1.5 shrink-0">
@@ -449,30 +632,78 @@ const Warehouse = () => {
                     </div>
                   </div>
 
-                  {/* Bottom row: badges + price + quantity */}
-                  <div className="flex items-center gap-2 flex-wrap pl-5">
+                  {/* Badges + total quantity */}
+                  <div className="px-4 pb-2.5 flex items-center gap-2 flex-wrap pl-9">
                     {product.category_name && (
                       <span className="text-[9px] font-semibold text-indigo-500 bg-slate-50 px-1.5 py-0.5 rounded-lg">{product.category_name}</span>
                     )}
                     <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-lg ${sc.bg} ${sc.text}`}>{sc.label}</span>
-
-                    <div className="ml-auto flex items-center gap-2">
-                      {saleUzs > 0 && (
-                        <p className="text-sm font-black text-[#6366f1] leading-tight">
-                          {saleUzs.toLocaleString()} so'm
-                        </p>
-                      )}
-                      {saleUsd > 0 && (
-                        <p className="text-sm font-black text-emerald-600 leading-tight">
-                          ${saleUsd.toLocaleString()}
-                        </p>
-                      )}
-                      <div className="text-center shrink-0 bg-slate-50 rounded-xl px-2.5 py-1">
-                        <p className="text-sm font-black text-slate-900 leading-tight">{product.quantity}</p>
-                        <p className="text-[9px] text-slate-400">{product.unit || 'dona'}</p>
-                      </div>
+                    <div className="ml-auto bg-slate-50 rounded-xl px-2.5 py-1 text-center">
+                      <p className="text-sm font-black text-slate-900 leading-tight">{product.total_quantity ?? product.quantity ?? 0}</p>
+                      <p className="text-[9px] text-slate-400">jami</p>
                     </div>
                   </div>
+
+                  {/* Variants toggle */}
+                  <button
+                    onClick={() => setExpandedProductId(isExpanded ? null : product.id)}
+                    className="mx-3 mb-2.5 flex items-center justify-between px-3 py-2 bg-slate-50 rounded-xl text-xs font-semibold text-slate-500 hover:bg-indigo-50 hover:text-[#6366f1] transition-all"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Stack className="w-3.5 h-3.5" />
+                      {variants.length} ta variant
+                    </span>
+                    <CaretRight className={`w-3.5 h-3.5 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                  </button>
+
+                  {/* Expanded variant list */}
+                  {isExpanded && (
+                    <div className="border-t border-slate-100">
+                      {variants.length === 0 ? (
+                        <p className="text-xs text-slate-400 text-center py-3">Variant yo'q</p>
+                      ) : (
+                        <div className="divide-y divide-slate-50">
+                          {variants.map((v) => {
+                            const vSc = getStatusCfg(v.status);
+                            const isUsd = (v.currency || 'uzs').toLowerCase() === 'usd';
+                            const price = parseFloat(v.sale_price || 0);
+                            return (
+                              <div key={v.id} className="flex items-center gap-2.5 px-4 py-2.5">
+                                <div className={`w-2 h-2 rounded-full shrink-0 ${vSc.dot}`} />
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-bold text-slate-800 truncate">{v.name}</p>
+                                  {v.barcode && <p className="text-[10px] text-slate-400">{v.barcode}</p>}
+                                </div>
+                                <p className={`text-xs font-bold shrink-0 ${isUsd ? 'text-emerald-600' : 'text-[#6366f1]'}`}>
+                                  {isUsd ? `$${price.toLocaleString()}` : `${price.toLocaleString()} so'm`}
+                                </p>
+                                <div className="text-center shrink-0 bg-slate-50 rounded-lg px-2 py-0.5">
+                                  <p className="text-xs font-black text-slate-900">{v.quantity}</p>
+                                  <p className="text-[9px] text-slate-400">{v.unit || 'dona'}</p>
+                                </div>
+                                <div className="flex gap-1 shrink-0">
+                                  <button onClick={() => openEditVariantModal(product, v)} className="w-6 h-6 text-[#6366f1] bg-slate-50 rounded-lg flex items-center justify-center hover:bg-[#6366f1] hover:text-white transition-all">
+                                    <PencilSimple className="w-3 h-3" />
+                                  </button>
+                                  <button onClick={() => openDeleteVariantModal(v)} className="w-6 h-6 text-red-400 bg-red-50 rounded-lg flex items-center justify-center hover:bg-red-500 hover:text-white transition-all">
+                                    <Trash className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                      <div className="p-3 pt-1">
+                        <button
+                          onClick={() => openAddVariantModal(product)}
+                          className="w-full flex items-center justify-center gap-1.5 py-2 bg-indigo-50 text-[#6366f1] rounded-xl text-xs font-bold hover:bg-[#6366f1] hover:text-white transition-all"
+                        >
+                          <Plus className="w-3.5 h-3.5" /> Variant qo'shish
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -847,6 +1078,68 @@ const Warehouse = () => {
                   Ha, o'chirish
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Add Variant Modal */}
+      {showAddVariantModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-end" onClick={() => { setShowAddVariantModal(false); resetVariantForm(); }}>
+          <div className="bg-white rounded-t-3xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 bg-white border-b border-slate-100 px-5 py-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">Variant qo'shish</h2>
+                <p className="text-xs text-slate-400 mt-0.5">{selectedProduct?.name}</p>
+              </div>
+              <button onClick={() => { setShowAddVariantModal(false); resetVariantForm(); }} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <VariantForm formData={variantFormData} setFormData={setVariantFormData} onSubmit={handleAddVariant} submitLabel="Saqlash" isPending={createVariantMutation.isPending} />
+          </div>
+        </div>
+      )}
+
+      {/* Edit Variant Modal */}
+      {showEditVariantModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-end" onClick={() => { setShowEditVariantModal(false); resetVariantForm(); }}>
+          <div className="bg-white rounded-t-3xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 bg-white border-b border-slate-100 px-5 py-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">Variant tahrirlash</h2>
+                <p className="text-xs text-slate-400 mt-0.5">{selectedProduct?.name} › {selectedVariant?.name}</p>
+              </div>
+              <button onClick={() => { setShowEditVariantModal(false); resetVariantForm(); }} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <VariantForm formData={variantFormData} setFormData={setVariantFormData} onSubmit={handleEditVariant} submitLabel="Yangilash" isPending={updateVariantMutation.isPending} />
+          </div>
+        </div>
+      )}
+
+      {/* Delete Variant Confirmation */}
+      {showDeleteVariantModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center px-4" onClick={() => setShowDeleteVariantModal(false)}>
+          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="text-center mb-5">
+              <div className="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                <Trash className="w-6 h-6 text-red-500" />
+              </div>
+              <h3 className="text-base font-bold text-slate-900 mb-1">Variantni o'chirish</h3>
+              <p className="text-sm text-slate-500">"{selectedVariant?.name}" variantini o'chirmoqchimisiz?</p>
+              <p className="text-xs text-slate-400 mt-1">Bu amal variantni nofaol qiladi.</p>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setShowDeleteVariantModal(false)} className="flex-1 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold text-sm">Bekor</button>
+              <button
+                onClick={handleDeleteVariant}
+                disabled={deleteVariantMutation.isPending}
+                className="flex-1 py-3 bg-red-500 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50 hover:bg-red-600"
+              >
+                {deleteVariantMutation.isPending && <Spinner className="animate-spin w-4 h-4" />}
+                O'chirish
+              </button>
             </div>
           </div>
         </div>
