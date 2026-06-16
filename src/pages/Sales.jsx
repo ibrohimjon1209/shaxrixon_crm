@@ -1,9 +1,9 @@
 import React, { useState, useMemo, useEffect, useRef, useLayoutEffect } from 'react';
 import {
-  FiSearch, FiPlus, FiMinus, FiX, FiCheck, FiSend, FiShare2,
-  FiArrowLeft, FiPackage, FiLoader, FiShoppingCart, FiUser,
-  FiChevronLeft, FiChevronRight, FiEdit2, FiTrash2
-} from 'react-icons/fi';
+  MagnifyingGlass, Plus, Minus, X, Check, PaperPlaneRight, ShareNetwork,
+  ArrowLeft, Package, Spinner, ShoppingCart, User,
+  CaretLeft, CaretRight, PencilSimple, Trash
+} from '@phosphor-icons/react';
 import { useProductsForSale } from '../hooks/useProducts';
 import { useCustomers, useCreateCustomer } from '../hooks/useCustomers';
 import { useCreateSale, useSales, useSale, useUpdateSale, useDeleteSale } from '../hooks/useSales';
@@ -130,9 +130,9 @@ const WheelDatePicker = ({ value, onChange }) => {
   return (
     <div>
       <div className="flex items-center justify-between mb-2 px-1">
-        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Kun</span>
-        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Oy</span>
-        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Yil</span>
+        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Kun</span>
+        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Oy</span>
+        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Yil</span>
       </div>
       <div className="flex gap-2">
         <WheelCol items={days} value={Math.min(day, daysInMonth)} onChange={setDay} />
@@ -207,7 +207,7 @@ const Sales = () => {
   const PM_COLORS = {
     cash: 'bg-emerald-50 text-emerald-700',
     debt: 'bg-orange-50 text-orange-700',
-    card: 'bg-blue-50 text-blue-700',
+    card: 'bg-slate-50 text-blue-700',
   };
 
   useEffect(() => { setProductPage(1); }, [searchTerm]);
@@ -392,7 +392,7 @@ const Sales = () => {
         <div className="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl">
           <div className="text-center">
             <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-5">
-              <FiCheck className="w-10 h-10 text-emerald-500" />
+              <Check className="w-10 h-10 text-emerald-500" />
             </div>
             <div className="mb-1 space-y-0.5">
               {saleAmounts.uzs === 0 && saleAmounts.usd === 0 ? (
@@ -403,22 +403,22 @@ const Sales = () => {
                     <p className="text-2xl font-black text-emerald-600">${saleAmounts.usd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                   )}
                   {saleAmounts.uzs > 0 && (
-                    <p className="text-2xl font-black text-[#1447E6]">{saleAmounts.uzs.toLocaleString()} so'm</p>
+                    <p className="text-2xl font-black text-[#6366f1]">{saleAmounts.uzs.toLocaleString()} so'm</p>
                   )}
                 </>
               )}
             </div>
-            <p className="text-gray-400 text-sm mb-6">Sotuv muvaffaqiyatli yakunlandi</p>
+            <p className="text-slate-400 text-sm mb-6">Sotuv muvaffaqiyatli yakunlandi</p>
             <div className="space-y-3">
               <button
                 onClick={handleViewReceipt}
-                className="w-full py-3.5 bg-[#1447E6] text-white rounded-2xl font-bold hover:bg-blue-700 transition-colors"
+                className="w-full py-3.5 bg-[#6366f1] text-white rounded-2xl font-bold hover:bg-blue-700 transition-colors"
               >
                 Chekni ko'rish
               </button>
               <button
                 onClick={handleNewSale}
-                className="w-full py-3.5 bg-gray-100 text-gray-700 rounded-2xl font-semibold hover:bg-gray-200 transition-colors"
+                className="w-full py-3.5 bg-slate-100 text-slate-700 rounded-2xl font-semibold hover:bg-slate-200 transition-colors"
               >
                 Yangi sotuv
               </button>
@@ -435,21 +435,21 @@ const Sales = () => {
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center px-4">
         <div className="bg-white rounded-3xl p-6 w-full max-w-md max-h-[85vh] overflow-y-auto shadow-2xl">
           <div className="flex items-center justify-between mb-5">
-            <button onClick={handleNewSale} className="w-9 h-9 bg-gray-100 rounded-xl flex items-center justify-center text-gray-600">
-              <FiArrowLeft className="w-4 h-4" />
+            <button onClick={handleNewSale} className="w-9 h-9 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600">
+              <ArrowLeft className="w-4 h-4" />
             </button>
-            <h2 className="text-lg font-bold text-gray-900">Chek #{lastCreatedSale?.id}</h2>
+            <h2 className="text-lg font-bold text-slate-900">Chek #{lastCreatedSale?.id}</h2>
             <div className="w-9" />
           </div>
 
           <div className="text-center mb-5">
-            <h3 className="text-base font-bold text-gray-900">BalonCRM Sotuv cheki</h3>
-            <p className="text-xs text-gray-400 mt-1">{formatDateTime(lastCreatedSale?.created_at)}</p>
-            <p className="text-xs text-gray-500 mt-0.5">Mijoz: {lastCreatedSale?.customer_name}</p>
+            <h3 className="text-base font-bold text-slate-900">BalonCRM Sotuv cheki</h3>
+            <p className="text-xs text-slate-400 mt-1">{formatDateTime(lastCreatedSale?.created_at)}</p>
+            <p className="text-xs text-slate-500 mt-0.5">Mijoz: {lastCreatedSale?.customer_name}</p>
           </div>
 
           <div className="mb-5 space-y-2">
-            <div className="grid grid-cols-4 gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest pb-2 border-b border-gray-100">
+            <div className="grid grid-cols-4 gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest pb-2 border-b border-slate-100">
               <div>Mahsulot</div>
               <div className="text-center">Miqdor</div>
               <div className="text-center">Narx</div>
@@ -462,27 +462,27 @@ const Sales = () => {
                 ? `$${v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                 : `${v.toLocaleString()} so'm`;
               return (
-                <div key={item.id} className="grid grid-cols-4 gap-2 py-1.5 border-b border-gray-50 last:border-0">
-                  <div className="font-medium text-gray-900 text-xs truncate">{item.product_name}</div>
-                  <div className="text-center text-gray-500 text-xs">{item.quantity}</div>
-                  <div className={`text-center text-xs font-semibold ${isUsd ? 'text-emerald-600' : 'text-[#1447E6]'}`}>{fmt(price)}</div>
-                  <div className={`text-right font-bold text-xs ${isUsd ? 'text-emerald-600' : 'text-[#1447E6]'}`}>{fmt(price * item.quantity)}</div>
+                <div key={item.id} className="grid grid-cols-4 gap-2 py-1.5 border-b border-slate-50 last:border-0">
+                  <div className="font-medium text-slate-900 text-xs truncate">{item.product_name}</div>
+                  <div className="text-center text-slate-500 text-xs">{item.quantity}</div>
+                  <div className={`text-center text-xs font-semibold ${isUsd ? 'text-emerald-600' : 'text-[#6366f1]'}`}>{fmt(price)}</div>
+                  <div className={`text-right font-bold text-xs ${isUsd ? 'text-emerald-600' : 'text-[#6366f1]'}`}>{fmt(price * item.quantity)}</div>
                 </div>
               );
             })}
           </div>
 
-          <div className="border-t border-dashed border-gray-200 pt-4 space-y-2 mb-5">
+          <div className="border-t border-dashed border-slate-200 pt-4 space-y-2 mb-5">
             {lastCreatedSale?.payment_method !== 'debt' && (
               <>
-                <div className="flex justify-between font-bold text-gray-900">
+                <div className="flex justify-between font-bold text-slate-900">
                   <span>Jami:</span>
                   <div className="text-right space-y-0.5">
-                    {saleAmounts.uzs > 0 && <p className="text-[#1447E6]">{saleAmounts.uzs.toLocaleString()} so'm</p>}
+                    {saleAmounts.uzs > 0 && <p className="text-[#6366f1]">{saleAmounts.uzs.toLocaleString()} so'm</p>}
                     {saleAmounts.usd > 0 && <p className="text-emerald-600">${saleAmounts.usd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>}
                   </div>
                 </div>
-                <div className="flex justify-between text-sm text-gray-500">
+                <div className="flex justify-between text-sm text-slate-500">
                   <span>To'landi:</span>
                   <div className="text-right space-y-0.5">
                     {saleAmounts.uzs > 0 && <p>{saleAmounts.uzs.toLocaleString()} so'm</p>}
@@ -505,19 +505,19 @@ const Sales = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#F0F4FF] pb-32">
+    <div className="min-h-screen bg-[#f8fafc] pb-32">
       {/* Sticky header */}
-      <div className="bg-white sticky top-0 z-50 border-b border-gray-100 shadow-sm">
+      <div className="bg-white sticky top-0 z-50 border-b border-slate-100 shadow-sm">
         <div className="px-5 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-gray-900">Sotuv</h1>
-            <p className="text-xs text-gray-400">Yangi buyurtma rasmiylashtirish</p>
+            <h1 className="text-xl font-bold text-slate-900">Sotuv</h1>
+            <p className="text-xs text-slate-400">Yangi buyurtma rasmiylashtirish</p>
           </div>
           <button
             onClick={() => setShowHistoryDrawer(true)}
-            className="flex items-center gap-2 bg-[#1447E6] text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-sm hover:bg-blue-700 active:scale-95 transition-all"
+            className="flex items-center gap-2 bg-[#6366f1] text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-sm hover:bg-blue-700 active:scale-95 transition-all"
           >
-            <FiShoppingCart className="w-3.5 h-3.5" />
+            <ShoppingCart className="w-3.5 h-3.5" />
             Tarix
             {historyTotal > 0 && (
               <span className="bg-white/20 px-1.5 py-0.5 rounded-lg text-[10px] font-black">{historyTotal}</span>
@@ -531,17 +531,17 @@ const Sales = () => {
 
 
         {/* Product selection */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
           <div className="flex items-center justify-between gap-3 mb-3">
-            <h3 className="text-sm font-bold text-gray-900">Mahsulotlar</h3>
+            <h3 className="text-sm font-bold text-slate-900">Mahsulotlar</h3>
             <div className="relative flex-1 max-w-[180px]">
-              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
+              <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-3.5 h-3.5" />
               <input
                 type="text"
                 placeholder="Qidirish..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-8 pr-3 py-2 bg-gray-50 rounded-xl text-xs border border-gray-100 focus:ring-2 focus:ring-[#1447E6]/20 focus:border-[#1447E6] outline-none"
+                className="w-full pl-8 pr-3 py-2 bg-slate-50 rounded-xl text-xs border border-slate-100 focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1] outline-none"
               />
             </div>
           </div>
@@ -549,10 +549,10 @@ const Sales = () => {
           <div className="grid grid-cols-2 gap-2.5 max-h-[320px] overflow-y-auto pr-1">
             {productsLoading ? (
               <div className="col-span-full py-10 flex justify-center">
-                <FiLoader className="w-6 h-6 text-[#1447E6] animate-spin" />
+                <Spinner className="w-6 h-6 text-[#6366f1] animate-spin" />
               </div>
             ) : products.length === 0 ? (
-              <div className="col-span-full py-8 text-center text-sm text-gray-400">Mahsulot topilmadi</div>
+              <div className="col-span-full py-8 text-center text-sm text-slate-400">Mahsulot topilmadi</div>
             ) : products.map((product) => {
               const isUzsProduct = product.currency === 'uzs';
               const priceUzs = isUzsProduct ? parseFloat(product.sale_price || 0) : 0;
@@ -564,24 +564,24 @@ const Sales = () => {
                   key={product.id}
                   onClick={() => addToCart(product)}
                   className={`${isHighPrice ? 'col-span-2' : ''} group cursor-pointer bg-white rounded-2xl p-3 border transition-all duration-200 ${product.quantity <= 0
-                    ? 'opacity-50 grayscale border-gray-100'
-                    : 'border-gray-100 hover:border-[#1447E6] hover:shadow-md active:scale-95'
+                    ? 'opacity-50 grayscale border-slate-100'
+                    : 'border-slate-100 hover:border-[#6366f1] hover:shadow-md active:scale-95'
                     }`}
                 >
                   <div className="flex items-start justify-between mb-2">
-                    <div className="w-8 h-8 bg-blue-50 rounded-xl flex items-center justify-center">
-                      <FiPackage className="w-4 h-4 text-[#1447E6]" />
+                    <div className="w-8 h-8 bg-slate-50 rounded-xl flex items-center justify-center">
+                      <Package className="w-4 h-4 text-[#6366f1]" />
                     </div>
                     <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-lg ${product.quantity <= 0 ? 'bg-red-50 text-red-500' : 'bg-emerald-50 text-emerald-600'
                       }`}>
                       {product.quantity <= 0 ? 'Yo\'q' : `${product.quantity} ${product.unit}`}
                     </span>
                   </div>
-                  <h4 className="font-semibold text-gray-800 text-xs mb-1.5 truncate leading-tight">{product.name}</h4>
+                  <h4 className="font-semibold text-slate-800 text-xs mb-1.5 truncate leading-tight">{product.name}</h4>
                   <div className="flex items-center justify-between">
                     <div className="flex flex-col gap-0.5">
                       {priceUzs > 0 && (
-                        <p className="text-[#1447E6] font-bold text-xs leading-tight">
+                        <p className="text-[#6366f1] font-bold text-xs leading-tight">
                           {priceUzs.toLocaleString()} so'm
                         </p>
                       )}
@@ -591,8 +591,8 @@ const Sales = () => {
                         </p>
                       )}
                     </div>
-                    <div className="w-6 h-6 bg-blue-50 text-[#1447E6] rounded-lg flex items-center justify-center group-hover:bg-[#1447E6] group-hover:text-white transition-colors">
-                      <FiPlus className="w-3 h-3" />
+                    <div className="w-6 h-6 bg-slate-50 text-[#6366f1] rounded-lg flex items-center justify-center group-hover:bg-[#6366f1] group-hover:text-white transition-colors">
+                      <Plus className="w-3 h-3" />
                     </div>
                   </div>
                 </div>
@@ -602,24 +602,24 @@ const Sales = () => {
 
           {/* Pagination */}
           {totalProductPages > 1 && (
-            <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
               <button
                 onClick={() => setProductPage(p => p - 1)}
                 disabled={productPage === 1 || productsLoading}
-                className="w-8 h-8 bg-gray-100 rounded-xl flex items-center justify-center text-gray-500 hover:bg-[#1447E6] hover:text-white transition-all disabled:opacity-30"
+                className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 hover:bg-[#6366f1] hover:text-white transition-all disabled:opacity-30"
               >
-                <FiChevronLeft className="w-4 h-4" />
+                <CaretLeft className="w-4 h-4" />
               </button>
-              <span className="text-xs font-bold text-gray-500">
+              <span className="text-xs font-bold text-slate-500">
                 {productPage} / {totalProductPages}
-                <span className="font-normal text-gray-400 ml-1">({productsData?.count} ta)</span>
+                <span className="font-normal text-slate-400 ml-1">({productsData?.count} ta)</span>
               </span>
               <button
                 onClick={() => setProductPage(p => p + 1)}
                 disabled={productPage === totalProductPages || productsLoading}
-                className="w-8 h-8 bg-gray-100 rounded-xl flex items-center justify-center text-gray-500 hover:bg-[#1447E6] hover:text-white transition-all disabled:opacity-30"
+                className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 hover:bg-[#6366f1] hover:text-white transition-all disabled:opacity-30"
               >
-                <FiChevronRight className="w-4 h-4" />
+                <CaretRight className="w-4 h-4" />
               </button>
             </div>
           )}
@@ -628,11 +628,11 @@ const Sales = () => {
 
         {/* Cart */}
         {cart.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
             <div className="flex items-center justify-between px-4 pt-4 pb-2">
-              <p className="text-xs font-semibold text-gray-400">Savatcha <span className="text-[#1447E6]">{cart.length} ta</span></p>
+              <p className="text-xs font-semibold text-slate-400">Savatcha <span className="text-[#6366f1]">{cart.length} ta</span></p>
             </div>
-            <div className="divide-y divide-gray-50">
+            <div className="divide-y divide-slate-50">
               {cart.map((item) => {
                 const isUsd = item.currency === 'USD';
                 const priceLabel = isUsd ? `$${item.price.toLocaleString()}` : `${item.price.toLocaleString()} so'm`;
@@ -644,18 +644,18 @@ const Sales = () => {
                     {/* Top row: name + total */}
                     <div className="flex items-center justify-between mb-2.5">
                       <div className="flex-1 min-w-0 pr-2">
-                        <p className="font-bold text-gray-900 text-sm truncate">{item.name}</p>
-                        <p className="text-xs text-gray-400">{priceLabel} × {item.quantity}</p>
+                        <p className="font-bold text-slate-900 text-sm truncate">{item.name}</p>
+                        <p className="text-xs text-slate-400">{priceLabel} × {item.quantity}</p>
                       </div>
-                      <p className={`text-sm font-black shrink-0 ${isUsd ? 'text-emerald-600' : 'text-[#1447E6]'}`}>{totalLabel}</p>
+                      <p className={`text-sm font-black shrink-0 ${isUsd ? 'text-emerald-600' : 'text-[#6366f1]'}`}>{totalLabel}</p>
                     </div>
                     {/* Bottom row: - input + X */}
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => updateQuantity(item.id, -1)}
-                        className="w-11 h-11 rounded-2xl bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200 active:scale-90 transition-all"
+                        className="w-11 h-11 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 active:scale-90 transition-all"
                       >
-                        <FiMinus className="w-5 h-5" />
+                        <Minus className="w-5 h-5" />
                       </button>
                       <input
                         type="number"
@@ -664,19 +664,19 @@ const Sales = () => {
                         value={item.quantity}
                         onChange={(e) => setQuantity(item.id, e.target.value)}
                         onBlur={() => commitQuantity(item.id)}
-                        className="flex-1 h-11 text-center font-black text-gray-900 text-lg bg-gray-50 rounded-2xl outline-none border border-gray-100 focus:border-[#1447E6]"
+                        className="flex-1 h-11 text-center font-black text-slate-900 text-lg bg-slate-50 rounded-2xl outline-none border border-slate-100 focus:border-[#6366f1]"
                       />
                       <button
                         onClick={() => updateQuantity(item.id, 1)}
-                        className="w-11 h-11 rounded-2xl bg-[#1447E6] flex items-center justify-center text-white hover:bg-blue-700 active:scale-90 transition-all"
+                        className="w-11 h-11 rounded-2xl bg-[#6366f1] flex items-center justify-center text-white hover:bg-blue-700 active:scale-90 transition-all"
                       >
-                        <FiPlus className="w-5 h-5" />
+                        <Plus className="w-5 h-5" />
                       </button>
                       <button
                         onClick={() => removeFromCart(item.id)}
                         className="w-11 h-11 rounded-2xl bg-red-500 flex items-center justify-center text-white hover:bg-red-600 active:scale-90 transition-all"
                       >
-                        <FiX className="w-5 h-5" />
+                        <X className="w-5 h-5" />
                       </button>
                     </div>
                   </div>
@@ -689,7 +689,7 @@ const Sales = () => {
 
         {/* Payment */}
         {cart.length > 0 && (
-          <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
             {/* Payment type toggle */}
             <div className="grid grid-cols-3 gap-2 mb-4">
               {[
@@ -704,8 +704,8 @@ const Sales = () => {
                     if (type.id === 'debt') { setCustomUzs(''); setCustomUsd(''); setCustomAmount(''); }
                   }}
                   className={`py-2.5 rounded-xl font-bold text-xs transition-all ${paymentType === type.id
-                    ? 'bg-[#1447E6] text-white shadow-sm'
-                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                    ? 'bg-[#6366f1] text-white shadow-sm'
+                    : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                     }`}
                 >
                   {type.label}
@@ -715,13 +715,13 @@ const Sales = () => {
 
             {/* Mijoz — barcha to'lov turlarida (nasiyada majburiy) */}
             <div className="mb-4">
-              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2">
-                Mijoz {paymentType === 'debt' ? <span className="text-red-400">*</span> : <span className="text-gray-300">(ixtiyoriy)</span>}
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">
+                Mijoz {paymentType === 'debt' ? <span className="text-red-400">*</span> : <span className="text-slate-300">(ixtiyoriy)</span>}
               </label>
                 <div className="flex gap-2">
                   <div className="relative flex-1">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <FiUser className="text-gray-400 w-4 h-4" />
+                      <User className="text-slate-400 w-4 h-4" />
                     </div>
                     <select
                       value={selectedCustomer?.id || ''}
@@ -729,7 +729,7 @@ const Sales = () => {
                         const id = e.target.value;
                         setSelectedCustomer(customers.find(c => c.id.toString() === id) || null);
                       }}
-                      className="w-full pl-9 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-[#1447E6]/20 focus:border-[#1447E6] text-gray-900 font-medium text-sm appearance-none outline-none"
+                      className="w-full pl-9 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1] text-slate-900 font-medium text-sm appearance-none outline-none"
                     >
                       <option value="">Mijozni tanlang...</option>
                       {customers.map(c => (
@@ -739,31 +739,31 @@ const Sales = () => {
                   </div>
                   <button
                     onClick={() => setIsAddCustomerModalOpen(true)}
-                    className="w-[46px] h-[46px] shrink-0 bg-[#1447E6] hover:bg-blue-700 text-white rounded-xl flex items-center justify-center transition-colors"
+                    className="w-[46px] h-[46px] shrink-0 bg-[#6366f1] hover:bg-blue-700 text-white rounded-xl flex items-center justify-center transition-colors"
                   >
-                    <FiPlus className="w-5 h-5" />
+                    <Plus className="w-5 h-5" />
                   </button>
                 </div>
             </div>
 
             {paymentType !== 'debt' && (
               <div className="mb-4 space-y-3">
-                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                   To'lov summasi
                 </label>
                 {cartHasUzs && (
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#1447E6]">so'm</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#6366f1]">so'm</span>
                     <input
                       type="number"
                       placeholder={getTotalUzs() > 0 ? getTotalUzs().toLocaleString() : '0'}
                       value={customUzs}
                       onChange={(e) => setCustomUzs(e.target.value)}
-                      className="w-full pl-12 pr-14 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-[#1447E6]/20 focus:border-[#1447E6] font-bold text-sm outline-none"
+                      className="w-full pl-12 pr-14 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1] font-bold text-sm outline-none"
                     />
                     {getTotalUzs() > 0 && (
                       <button type="button" onClick={() => setCustomUzs(getTotalUzs().toString())}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 rounded-lg text-[10px] font-bold bg-[#1447E6]/10 text-[#1447E6] hover:opacity-80">
+                        className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 rounded-lg text-[10px] font-bold bg-[#6366f1]/10 text-[#6366f1] hover:opacity-80">
                         to'liq
                       </button>
                     )}
@@ -777,7 +777,7 @@ const Sales = () => {
                       placeholder={getTotalUsd() > 0 ? getTotalUsd().toFixed(2) : '0'}
                       value={customUsd}
                       onChange={(e) => setCustomUsd(e.target.value)}
-                      className="w-full pl-7 pr-14 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400 font-bold text-sm outline-none"
+                      className="w-full pl-7 pr-14 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400 font-bold text-sm outline-none"
                     />
                     {getTotalUsd() > 0 && (
                       <button type="button" onClick={() => setCustomUsd(getTotalUsd().toString())}
@@ -790,12 +790,12 @@ const Sales = () => {
               </div>
             )}
 
-            <div className="pt-3 border-t border-gray-100 space-y-1 mb-4">
-              <div className="flex justify-between font-bold text-gray-900">
+            <div className="pt-3 border-t border-slate-100 space-y-1 mb-4">
+              <div className="flex justify-between font-bold text-slate-900">
                 <span className="text-sm">Jami:</span>
                 <div className="text-right space-y-0.5">
                   {cartHasUzs && (
-                    <p className="text-base text-[#1447E6]">
+                    <p className="text-base text-[#6366f1]">
                       {(customUzsAmount > 0 ? customUzsAmount : getTotalUzs()).toLocaleString()} so'm
                     </p>
                   )}
@@ -815,18 +815,18 @@ const Sales = () => {
                   setShowDebtModal(true);
                 }}
                 disabled={!selectedCustomer}
-                className="w-full py-4 bg-[#1447E6] text-white rounded-2xl font-bold text-sm hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-4 bg-[#6366f1] text-white rounded-2xl font-bold text-sm hover:bg-blue-700 transition-all shadow-lg shadow-slate-200 disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                <FiSend className="w-4 h-4" />
+                <PaperPlaneRight className="w-4 h-4" />
                 Davom etish
               </button>
             ) : (
               <button
                 onClick={handleCompleteSale}
                 disabled={createSaleMutation.isPending}
-                className="w-full py-4 bg-[#1447E6] text-white rounded-2xl font-bold text-sm hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-4 bg-[#6366f1] text-white rounded-2xl font-bold text-sm hover:bg-blue-700 transition-all shadow-lg shadow-slate-200 disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {createSaleMutation.isPending ? <FiLoader className="animate-spin w-4 h-4" /> : <FiCheck className="w-4 h-4" />}
+                {createSaleMutation.isPending ? <Spinner className="animate-spin w-4 h-4" /> : <Check className="w-4 h-4" />}
                 Sotuvni yakunlash
               </button>
             )}
@@ -837,21 +837,21 @@ const Sales = () => {
       {showDebtModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-end" onClick={() => setShowDebtModal(false)}>
           <div className="bg-white rounded-t-3xl w-full" onClick={(e) => e.stopPropagation()}>
-            <div className="px-5 pt-5 pb-2 flex items-center justify-between border-b border-gray-100">
-              <h2 className="text-base font-bold text-gray-900">Nasiya ma'lumotlari</h2>
-              <button onClick={() => setShowDebtModal(false)} className="w-8 h-8 bg-gray-100 rounded-xl flex items-center justify-center text-gray-500">
-                <FiX className="w-4 h-4" />
+            <div className="px-5 pt-5 pb-2 flex items-center justify-between border-b border-slate-100">
+              <h2 className="text-base font-bold text-slate-900">Nasiya ma'lumotlari</h2>
+              <button onClick={() => setShowDebtModal(false)} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500">
+                <X className="w-4 h-4" />
               </button>
             </div>
             <div className="p-5 space-y-4">
               <div>
-                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
                   Qarz muddati
                 </label>
                 <WheelDatePicker value={debtDueDate} onChange={setDebtDueDate} />
               </div>
               <div>
-                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
                   Izoh (ixtiyoriy)
                 </label>
                 <textarea
@@ -859,15 +859,15 @@ const Sales = () => {
                   onChange={(e) => setDebtNote(e.target.value)}
                   rows={3}
                   placeholder="Qo'shimcha izoh kiriting..."
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-[#1447E6]/20 focus:border-[#1447E6] text-sm outline-none text-gray-900 resize-none"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1] text-sm outline-none text-slate-900 resize-none"
                 />
               </div>
               <button
                 onClick={handleCompleteSale}
                 disabled={createSaleMutation.isPending || !debtDueDate}
-                className="w-full py-4 bg-[#1447E6] text-white rounded-2xl font-bold text-sm hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-4 bg-[#6366f1] text-white rounded-2xl font-bold text-sm hover:bg-blue-700 transition-all shadow-lg shadow-slate-200 disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {createSaleMutation.isPending ? <FiLoader className="animate-spin w-4 h-4" /> : <FiCheck className="w-4 h-4" />}
+                {createSaleMutation.isPending ? <Spinner className="animate-spin w-4 h-4" /> : <Check className="w-4 h-4" />}
                 Sotuvni yakunlash
               </button>
             </div>
@@ -878,29 +878,29 @@ const Sales = () => {
       {/* ── History Drawer ── */}
       {showHistoryDrawer && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-end" onClick={() => setShowHistoryDrawer(false)}>
-          <div className="bg-[#F0F4FF] rounded-t-3xl w-full max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
+          <div className="bg-[#f8fafc] rounded-t-3xl w-full max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
             {/* Drawer header */}
-            <div className="bg-white px-5 py-4 flex items-center justify-between border-b border-gray-100 rounded-t-3xl shrink-0">
+            <div className="bg-white px-5 py-4 flex items-center justify-between border-b border-slate-100 rounded-t-3xl shrink-0">
               <div>
-                <h2 className="text-base font-bold text-gray-900">Sotuvlar tarixi</h2>
-                {historyTotal > 0 && <p className="text-xs text-gray-400">{historyTotal} ta sotuv</p>}
+                <h2 className="text-base font-bold text-slate-900">Sotuvlar tarixi</h2>
+                {historyTotal > 0 && <p className="text-xs text-slate-400">{historyTotal} ta sotuv</p>}
               </div>
-              <button onClick={() => setShowHistoryDrawer(false)} className="w-8 h-8 bg-gray-100 rounded-xl flex items-center justify-center text-gray-500 hover:bg-gray-200">
-                <FiX className="w-4 h-4" />
+              <button onClick={() => setShowHistoryDrawer(false)} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-200">
+                <X className="w-4 h-4" />
               </button>
             </div>
             {/* Drawer body */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {historyLoading && allHistorySales.length === 0 ? (
                 <div className="flex justify-center py-12">
-                  <FiLoader className="w-6 h-6 text-[#1447E6] animate-spin" />
+                  <Spinner className="w-6 h-6 text-[#6366f1] animate-spin" />
                 </div>
               ) : allHistorySales.length === 0 ? (
                 <div className="py-12 text-center">
-                  <p className="text-sm text-gray-400">Hali sotuv yo'q</p>
+                  <p className="text-sm text-slate-400">Hali sotuv yo'q</p>
                 </div>
               ) : (
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                   {allHistorySales.map((sale, idx) => {
                     const uzs = parseFloat(sale.total_uzs || 0);
                     const usd = parseFloat(sale.total_usd || 0);
@@ -908,24 +908,24 @@ const Sales = () => {
                       <div
                         key={sale.id}
                         onClick={() => { setSelectedSaleId(sale.id); setShowDetailModal(true); }}
-                        className={`flex items-center gap-3 px-4 py-3 cursor-pointer active:bg-gray-50 hover:bg-gray-50 transition-colors ${idx < allHistorySales.length - 1 ? 'border-b border-gray-50' : ''}`}
+                        className={`flex items-center gap-3 px-4 py-3 cursor-pointer active:bg-slate-50 hover:bg-slate-50 transition-colors ${idx < allHistorySales.length - 1 ? 'border-b border-slate-50' : ''}`}
                       >
-                        <div className="w-9 h-9 bg-blue-50 rounded-full flex items-center justify-center font-bold text-[#1447E6] text-sm shrink-0">
+                        <div className="w-9 h-9 bg-slate-50 rounded-full flex items-center justify-center font-bold text-[#6366f1] text-sm shrink-0">
                           {sale.customer_name?.charAt(0) || 'M'}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <p className="text-xs font-semibold text-gray-900 truncate">{sale.customer_name}</p>
+                            <p className="text-xs font-semibold text-slate-900 truncate">{sale.customer_name}</p>
                             {sale.is_overdue && <span className="text-[9px] font-bold text-red-500 bg-red-50 px-1.5 py-0.5 rounded-lg shrink-0">Muddati o'tgan</span>}
                           </div>
                           <div className="flex items-center gap-2 mt-0.5">
-                            <p className="text-[10px] text-gray-400">{new Date(sale.created_at).toLocaleDateString('uz-UZ')}</p>
-                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-lg bg-gray-100 text-gray-600">{sale.payment_method_display}</span>
+                            <p className="text-[10px] text-slate-400">{new Date(sale.created_at).toLocaleDateString('uz-UZ')}</p>
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-lg bg-slate-100 text-slate-600">{sale.payment_method_display}</span>
                           </div>
                         </div>
                         <div className="text-right shrink-0">
                           {usd > 0 && <p className="text-xs font-bold text-emerald-600">${usd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>}
-                          {uzs > 0 && <p className="text-xs font-bold text-[#1447E6]">{uzs.toLocaleString()} so'm</p>}
+                          {uzs > 0 && <p className="text-xs font-bold text-[#6366f1]">{uzs.toLocaleString()} so'm</p>}
                         </div>
                       </div>
                     );
@@ -936,9 +936,9 @@ const Sales = () => {
                 <button
                   onClick={() => setHistoryPage(p => p + 1)}
                   disabled={historyFetching}
-                  className="w-full py-3 bg-white border border-gray-100 rounded-2xl text-sm font-semibold text-gray-600 hover:bg-gray-50 flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
+                  className="w-full py-3 bg-white border border-slate-100 rounded-2xl text-sm font-semibold text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
                 >
-                  {historyFetching && <FiLoader className="animate-spin w-4 h-4" />}
+                  {historyFetching && <Spinner className="animate-spin w-4 h-4" />}
                   {historyFetching ? 'Yuklanmoqda...' : `Yana ko'rish (${historyTotal - allHistorySales.length} ta qoldi)`}
                 </button>
               )}
@@ -951,8 +951,8 @@ const Sales = () => {
       {showDetailModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-end" onClick={() => setShowDetailModal(false)}>
           <div className="bg-white rounded-t-3xl w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <div className="sticky top-0 bg-white border-b border-gray-100 px-5 py-4 flex items-center justify-between">
-              <h2 className="text-base font-bold text-gray-900">Sotuv #{saleDetail?.id}</h2>
+            <div className="sticky top-0 bg-white border-b border-slate-100 px-5 py-4 flex items-center justify-between">
+              <h2 className="text-base font-bold text-slate-900">Sotuv #{saleDetail?.id}</h2>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => {
@@ -964,46 +964,46 @@ const Sales = () => {
                     setShowEditSaleModal(true);
                     setShowDetailModal(false);
                   }}
-                  className="w-8 h-8 bg-blue-50 text-[#1447E6] rounded-xl flex items-center justify-center hover:bg-[#1447E6] hover:text-white transition-all"
+                  className="w-8 h-8 bg-slate-50 text-[#6366f1] rounded-xl flex items-center justify-center hover:bg-[#6366f1] hover:text-white transition-all"
                 >
-                  <FiEdit2 className="w-3.5 h-3.5" />
+                  <PencilSimple className="w-3.5 h-3.5" />
                 </button>
                 <button
                   onClick={() => { setShowDeleteSaleModal(true); setShowDetailModal(false); }}
                   className="w-8 h-8 bg-red-50 text-red-400 rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all"
                 >
-                  <FiTrash2 className="w-3.5 h-3.5" />
+                  <Trash className="w-3.5 h-3.5" />
                 </button>
-                <button onClick={() => setShowDetailModal(false)} className="w-8 h-8 bg-gray-100 rounded-xl flex items-center justify-center text-gray-500">
-                  <FiX className="w-4 h-4" />
+                <button onClick={() => setShowDetailModal(false)} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500">
+                  <X className="w-4 h-4" />
                 </button>
               </div>
             </div>
 
             {detailLoading ? (
-              <div className="flex justify-center py-16"><FiLoader className="w-8 h-8 text-[#1447E6] animate-spin" /></div>
+              <div className="flex justify-center py-16"><Spinner className="w-8 h-8 text-[#6366f1] animate-spin" /></div>
             ) : saleDetail ? (
               <div className="p-5 space-y-4">
                 {/* Info */}
-                <div className="bg-gray-50 rounded-2xl p-4 space-y-2.5">
+                <div className="bg-slate-50 rounded-2xl p-4 space-y-2.5">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Mijoz</span>
-                    <span className="font-semibold text-gray-900">{saleDetail.customer_name}</span>
+                    <span className="text-slate-400">Mijoz</span>
+                    <span className="font-semibold text-slate-900">{saleDetail.customer_name}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Sana</span>
-                    <span className="font-semibold text-gray-900">{formatDateTime(saleDetail.created_at)}</span>
+                    <span className="text-slate-400">Sana</span>
+                    <span className="font-semibold text-slate-900">{formatDateTime(saleDetail.created_at)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">To'lov</span>
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-lg ${PM_COLORS[saleDetail.payment_method] || 'bg-gray-100 text-gray-600'}`}>
+                    <span className="text-slate-400">To'lov</span>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-lg ${PM_COLORS[saleDetail.payment_method] || 'bg-slate-100 text-slate-600'}`}>
                       {PM_LABELS[saleDetail.payment_method] || saleDetail.payment_method}
                     </span>
                   </div>
                   {saleDetail.debt_due_date && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Qarz muddati</span>
-                      <span className={`font-semibold ${saleDetail.is_overdue ? 'text-red-500' : 'text-gray-900'}`}>
+                      <span className="text-slate-400">Qarz muddati</span>
+                      <span className={`font-semibold ${saleDetail.is_overdue ? 'text-red-500' : 'text-slate-900'}`}>
                         {new Date(saleDetail.debt_due_date).toLocaleDateString('uz-UZ')}
                         {saleDetail.is_overdue && ' (muddati o\'tgan)'}
                       </span>
@@ -1011,17 +1011,17 @@ const Sales = () => {
                   )}
                   {saleDetail.note && (
                     <div className="flex justify-between text-sm gap-4">
-                      <span className="text-gray-400 shrink-0">Izoh</span>
-                      <span className="font-medium text-gray-700 text-right">{saleDetail.note}</span>
+                      <span className="text-slate-400 shrink-0">Izoh</span>
+                      <span className="font-medium text-slate-700 text-right">{saleDetail.note}</span>
                     </div>
                   )}
                 </div>
 
                 {/* Items */}
                 <div>
-                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Mahsulotlar</h3>
-                  <div className="bg-gray-50 rounded-2xl overflow-hidden">
-                    <div className="grid grid-cols-4 gap-2 px-4 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100">
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Mahsulotlar</h3>
+                  <div className="bg-slate-50 rounded-2xl overflow-hidden">
+                    <div className="grid grid-cols-4 gap-2 px-4 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">
                       <div className="col-span-2">Nomi</div>
                       <div className="text-center">Miqdor</div>
                       <div className="text-right">Narx</div>
@@ -1033,10 +1033,10 @@ const Sales = () => {
                         ? `$${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                         : `${price.toLocaleString()} so'm`;
                       return (
-                        <div key={i} className="grid grid-cols-4 gap-2 px-4 py-2.5 border-b border-gray-100 last:border-0 text-sm">
-                          <div className="col-span-2 font-medium text-gray-900 truncate">{item.product_name}</div>
-                          <div className="text-center text-gray-500">{item.quantity}</div>
-                          <div className={`text-right font-bold ${isUsd ? 'text-emerald-600' : 'text-[#1447E6]'}`}>{fmtPrice}</div>
+                        <div key={i} className="grid grid-cols-4 gap-2 px-4 py-2.5 border-b border-slate-100 last:border-0 text-sm">
+                          <div className="col-span-2 font-medium text-slate-900 truncate">{item.product_name}</div>
+                          <div className="text-center text-slate-500">{item.quantity}</div>
+                          <div className={`text-right font-bold ${isUsd ? 'text-emerald-600' : 'text-[#6366f1]'}`}>{fmtPrice}</div>
                         </div>
                       );
                     })}
@@ -1044,28 +1044,28 @@ const Sales = () => {
                 </div>
 
                 {/* Totals */}
-                <div className="bg-gray-50 rounded-2xl p-4 space-y-2">
+                <div className="bg-slate-50 rounded-2xl p-4 space-y-2">
                   {parseFloat(saleDetail.total_uzs || 0) > 0 && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Jami (so'm)</span>
-                      <span className="font-bold text-[#1447E6]">{parseFloat(saleDetail.total_uzs).toLocaleString()} so'm</span>
+                      <span className="text-slate-400">Jami (so'm)</span>
+                      <span className="font-bold text-[#6366f1]">{parseFloat(saleDetail.total_uzs).toLocaleString()} so'm</span>
                     </div>
                   )}
                   {parseFloat(saleDetail.total_usd || 0) > 0 && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Jami ($)</span>
+                      <span className="text-slate-400">Jami ($)</span>
                       <span className="font-bold text-emerald-600">${parseFloat(saleDetail.total_usd).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                     </div>
                   )}
                   {parseFloat(saleDetail.paid_amount || 0) > 0 && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">To'langan</span>
+                      <span className="text-slate-400">To'langan</span>
                       <span className="font-bold text-emerald-600">{parseFloat(saleDetail.paid_amount).toLocaleString()} so'm</span>
                     </div>
                   )}
                   {parseFloat(saleDetail.remaining_amount || 0) > 0 && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Qarz (qolgan)</span>
+                      <span className="text-slate-400">Qarz (qolgan)</span>
                       <span className="font-bold text-red-500">{parseFloat(saleDetail.remaining_amount).toLocaleString()} so'm</span>
                     </div>
                   )}
@@ -1080,20 +1080,20 @@ const Sales = () => {
       {showEditSaleModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] flex items-end" onClick={() => setShowEditSaleModal(false)}>
           <div className="bg-white rounded-t-3xl w-full" onClick={e => e.stopPropagation()}>
-            <div className="px-5 pt-5 pb-2 flex items-center justify-between border-b border-gray-100">
-              <h2 className="text-base font-bold text-gray-900">Sotuvni tahrirlash</h2>
-              <button onClick={() => setShowEditSaleModal(false)} className="w-8 h-8 bg-gray-100 rounded-xl flex items-center justify-center text-gray-500">
-                <FiX className="w-4 h-4" />
+            <div className="px-5 pt-5 pb-2 flex items-center justify-between border-b border-slate-100">
+              <h2 className="text-base font-bold text-slate-900">Sotuvni tahrirlash</h2>
+              <button onClick={() => setShowEditSaleModal(false)} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500">
+                <X className="w-4 h-4" />
               </button>
             </div>
             <div className="p-5 space-y-4">
               <div>
-                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">To'lov turi</label>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">To'lov turi</label>
                 <div className="grid grid-cols-3 gap-2">
                   {[{ id: 'cash', label: 'Naqd' }, { id: 'debt', label: 'Nasiya' }, { id: 'card', label: 'Karta' }].map(t => (
                     <button key={t.id}
                       onClick={() => setEditSaleData(d => ({ ...d, payment_method: t.id }))}
-                      className={`py-2.5 rounded-xl font-bold text-xs transition-all ${editSaleData.payment_method === t.id ? 'bg-[#1447E6] text-white' : 'bg-gray-100 text-gray-500'}`}>
+                      className={`py-2.5 rounded-xl font-bold text-xs transition-all ${editSaleData.payment_method === t.id ? 'bg-[#6366f1] text-white' : 'bg-slate-100 text-slate-500'}`}>
                       {t.label}
                     </button>
                   ))}
@@ -1101,17 +1101,17 @@ const Sales = () => {
               </div>
               {editSaleData.payment_method === 'debt' && (
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Qarz muddati</label>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Qarz muddati</label>
                   <input type="date" value={editSaleData.debt_due_date}
                     onChange={e => setEditSaleData(d => ({ ...d, debt_due_date: e.target.value }))}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-[#1447E6]/20 focus:border-[#1447E6]" />
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1]" />
                 </div>
               )}
               <div>
-                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Izoh</label>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Izoh</label>
                 <textarea value={editSaleData.note} onChange={e => setEditSaleData(d => ({ ...d, note: e.target.value }))}
                   rows={3} placeholder="Izoh..."
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm outline-none resize-none focus:ring-2 focus:ring-[#1447E6]/20 focus:border-[#1447E6]" />
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm outline-none resize-none focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1]" />
               </div>
               <button
                 onClick={async () => {
@@ -1121,8 +1121,8 @@ const Sales = () => {
                   } catch { }
                 }}
                 disabled={updateSaleMutation.isPending}
-                className="w-full py-4 bg-[#1447E6] text-white rounded-2xl font-bold text-sm disabled:opacity-50 flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors">
-                {updateSaleMutation.isPending ? <FiLoader className="animate-spin w-4 h-4" /> : <FiCheck className="w-4 h-4" />}
+                className="w-full py-4 bg-[#6366f1] text-white rounded-2xl font-bold text-sm disabled:opacity-50 flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors">
+                {updateSaleMutation.isPending ? <Spinner className="animate-spin w-4 h-4" /> : <Check className="w-4 h-4" />}
                 Saqlash
               </button>
             </div>
@@ -1136,13 +1136,13 @@ const Sales = () => {
           <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl" onClick={e => e.stopPropagation()}>
             <div className="text-center mb-5">
               <div className="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                <FiTrash2 className="w-6 h-6 text-red-500" />
+                <Trash className="w-6 h-6 text-red-500" />
               </div>
-              <h3 className="text-base font-bold text-gray-900 mb-1">Sotuvni o'chirish</h3>
-              <p className="text-sm text-gray-500">Bu amalni ortga qaytarib bo'lmaydi.</p>
+              <h3 className="text-base font-bold text-slate-900 mb-1">Sotuvni o'chirish</h3>
+              <p className="text-sm text-slate-500">Bu amalni ortga qaytarib bo'lmaydi.</p>
             </div>
             <div className="flex gap-3">
-              <button onClick={() => setShowDeleteSaleModal(false)} className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold text-sm">Bekor</button>
+              <button onClick={() => setShowDeleteSaleModal(false)} className="flex-1 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold text-sm">Bekor</button>
               <button
                 onClick={async () => {
                   try {
@@ -1153,7 +1153,7 @@ const Sales = () => {
                 }}
                 disabled={deleteSaleMutation.isPending}
                 className="flex-1 py-3 bg-red-500 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50 hover:bg-red-600">
-                {deleteSaleMutation.isPending && <FiLoader className="animate-spin w-4 h-4" />}
+                {deleteSaleMutation.isPending && <Spinner className="animate-spin w-4 h-4" />}
                 O'chirish
               </button>
             </div>

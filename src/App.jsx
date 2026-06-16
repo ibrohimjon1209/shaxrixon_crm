@@ -31,8 +31,8 @@ const ProtectedRoute = ({ children }) => {
   
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
       </div>
     );
   }
@@ -44,7 +44,7 @@ const AppContent = () => {
   const { isAuthenticated } = useAuth();
   
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-slate-50 flex">
       {isAuthenticated && <Navbar />}
       <main className={`flex-1 min-w-0 ${isAuthenticated ? 'md:ml-60' : ''}`}>
         <Routes>

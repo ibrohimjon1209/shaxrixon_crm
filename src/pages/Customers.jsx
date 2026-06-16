@@ -2,21 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import {
-  FiPlus, FiSearch, FiPhone, FiEdit,
-  FiTrash2, FiMessageCircle, FiFileText, FiX, FiCheckCircle,
-  FiMapPin, FiCalendar, FiCreditCard, FiLoader, FiUsers,
-  FiChevronDown, FiChevronUp
-} from 'react-icons/fi';
-import { FiSend } from 'react-icons/fi';
+  Plus, MagnifyingGlass, Phone, Pencil,
+  Trash, ChatCircle, FileText, X, CheckCircle,
+  MapPin, Calendar, CreditCard, Spinner, Users,
+  CaretDown, CaretUp
+} from '@phosphor-icons/react';
+import { PaperPlaneRight } from '@phosphor-icons/react';
 import { useCustomers, useCustomer, useDebtors, useCustomerSalesHistory, useCreateCustomer, useUpdateCustomer, useDeleteCustomer, usePayDebt, useSendDebtReminder } from '../hooks/useCustomers';
 import { toast } from 'react-toastify';
 import { formatPhoneNumber, cleanPhoneNumber } from '../utils/phoneFormat';
 
 const statusConfig = {
-  active: { label: 'Faol', border: 'border-l-blue-500', badge: 'bg-blue-50 text-blue-600' },
+  active: { label: 'Faol', border: 'border-l-indigo-500', badge: 'bg-slate-50 text-indigo-600' },
   vip: { label: 'VIP', border: 'border-l-amber-400', badge: 'bg-amber-50 text-amber-600' },
   debtor: { label: 'Qarzdor', border: 'border-l-red-500', badge: 'bg-red-50 text-red-600' },
-  inactive: { label: 'Nofaol', border: 'border-l-gray-400', badge: 'bg-gray-50 text-gray-500' },
+  inactive: { label: 'Nofaol', border: 'border-l-slate-400', badge: 'bg-slate-50 text-slate-500' },
 };
 
 const hasAnyDebt = (c) => parseFloat(c?.debt_uzs || 0) > 0 || parseFloat(c?.debt_usd || 0) > 0;
@@ -58,11 +58,11 @@ const SwipeableCustomerCard = ({ customer, onClick, onEdit, onDelete }) => {
       <div className="absolute inset-0 flex justify-between items-center rounded-2xl pointer-events-none">
         <motion.div
           style={{ opacity: editOpacity }}
-          className="w-1/2 h-full bg-gradient-to-r from-[#1447E6] to-blue-400 flex items-center justify-start pl-6 rounded-l-2xl"
+          className="w-1/2 h-full bg-gradient-to-r from-[#6366f1] to-blue-400 flex items-center justify-start pl-6 rounded-l-2xl"
         >
           <motion.div style={{ scale: editScale }} className="flex flex-col items-center">
             <div className="bg-white/20 p-2.5 rounded-full mb-1">
-              <FiEdit className="text-white w-4 h-4" />
+              <Pencil className="text-white w-4 h-4" />
             </div>
             <span className="text-[10px] text-white font-bold">Tahrir</span>
           </motion.div>
@@ -73,7 +73,7 @@ const SwipeableCustomerCard = ({ customer, onClick, onEdit, onDelete }) => {
         >
           <motion.div style={{ scale: deleteScale }} className="flex flex-col items-center">
             <div className="bg-white/20 p-2.5 rounded-full mb-1">
-              <FiTrash2 className="text-white w-4 h-4" />
+              <Trash className="text-white w-4 h-4" />
             </div>
             <span className="text-[10px] text-white font-bold">O'chirish</span>
           </motion.div>
@@ -93,16 +93,16 @@ const SwipeableCustomerCard = ({ customer, onClick, onEdit, onDelete }) => {
         onClick={() => onClick(customer)}
       >
         <div className="flex items-center gap-3 p-4">
-          <div className={`w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-base shrink-0 ${customer.status === 'vip' ? 'bg-gradient-to-br from-amber-400 to-amber-500' : 'bg-gradient-to-br from-[#1447E6] to-[#0F3CC7]'}`}>
+          <div className={`w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-base shrink-0 ${customer.status === 'vip' ? 'bg-gradient-to-br from-amber-400 to-amber-500' : 'bg-gradient-to-br from-[#6366f1] to-[#4338ca]'}`}>
             {customer.name ? customer.name.charAt(0).toUpperCase() : 'M'}
           </div>
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-0.5">
-              <h3 className="font-bold text-sm text-gray-900 truncate">{customer.name}</h3>
+              <h3 className="font-bold text-sm text-slate-900 truncate">{customer.name}</h3>
             </div>
-            <div className="flex items-center gap-1 text-gray-400 text-xs">
-              <FiPhone className="w-3 h-3" />
+            <div className="flex items-center gap-1 text-slate-400 text-xs">
+              <Phone className="w-3 h-3" />
               <span>{customer.phone}</span>
             </div>
           </div>
@@ -114,7 +114,7 @@ const SwipeableCustomerCard = ({ customer, onClick, onEdit, onDelete }) => {
                 {debtUsd > 0 && <span className="text-xs font-bold text-red-500 bg-red-50 px-2 py-1 rounded-xl block">${debtUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>}
               </>
             ) : (
-              <span className="text-xs font-bold text-blue-500 bg-blue-50 px-2 py-1 rounded-xl block">Qarsiz</span>
+              <span className="text-xs font-bold text-indigo-500 bg-slate-50 px-2 py-1 rounded-xl block">Qarsiz</span>
             )}
           </div>
         </div>
@@ -176,22 +176,22 @@ const CustomerDetailModal = ({ customer, onClose, onDelete, onEdit }) => {
       initial={{ opacity: 0, y: 80 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 80 }}
-      className="fixed inset-0 z-[100] bg-[#F0F4FF] flex flex-col"
+      className="fixed inset-0 z-[100] bg-[#f8fafc] flex flex-col"
     >
       {/* Header */}
-      <div className="bg-gradient-to-br from-[#1447E6] to-[#0F3CC7] px-5 pt-12 pb-20 relative overflow-hidden">
+      <div className="bg-gradient-to-br from-[#6366f1] to-[#4338ca] px-5 pt-12 pb-20 relative overflow-hidden">
         <div className="absolute -top-8 -right-8 w-32 h-32 bg-white/10 rounded-full" />
         <div className="absolute top-12 -right-4 w-20 h-20 bg-white/5 rounded-full" />
         <div className="flex items-center justify-between mb-4 relative z-10">
           <button onClick={onClose} className="w-9 h-9 bg-white/10 rounded-xl flex items-center justify-center text-white hover:bg-white/20 transition-colors">
-            <FiX className="w-5 h-5" />
+            <X className="w-5 h-5" />
           </button>
           <div className="flex items-center gap-2">
             <button onClick={() => onEdit(customer)} className="w-9 h-9 bg-white/10 rounded-xl flex items-center justify-center text-white hover:bg-white/20 transition-colors">
-              <FiEdit className="w-4 h-4" />
+              <Pencil className="w-4 h-4" />
             </button>
             <button onClick={() => onDelete(customer.id)} className="w-9 h-9 bg-red-500/20 text-red-100 rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors">
-              <FiTrash2 className="w-5 h-5" />
+              <Trash className="w-5 h-5" />
             </button>
           </div>
         </div>
@@ -200,14 +200,14 @@ const CustomerDetailModal = ({ customer, onClose, onDelete, onEdit }) => {
 
       {/* Avatar card overlapping header */}
       <div className="px-5 -mt-12 relative z-10 mb-4">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-center gap-4">
-          <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white font-bold text-2xl shrink-0 ${detail.status === 'vip' ? 'bg-gradient-to-br from-amber-400 to-amber-500' : 'bg-gradient-to-br from-[#1447E6] to-[#0F3CC7]'}`}>
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 flex items-center gap-4">
+          <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white font-bold text-2xl shrink-0 ${detail.status === 'vip' ? 'bg-gradient-to-br from-amber-400 to-amber-500' : 'bg-gradient-to-br from-[#6366f1] to-[#4338ca]'}`}>
             {detail.name ? detail.name.charAt(0).toUpperCase() : 'M'}
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="text-lg font-bold text-gray-900 truncate">{detail.name}</h2>
-            <div className="flex items-center gap-1 text-gray-500 text-sm mt-0.5">
-              <FiPhone className="w-3.5 h-3.5" />
+            <h2 className="text-lg font-bold text-slate-900 truncate">{detail.name}</h2>
+            <div className="flex items-center gap-1 text-slate-500 text-sm mt-0.5">
+              <Phone className="w-3.5 h-3.5" />
               <span>{detail.phone}</span>
             </div>
           </div>
@@ -217,14 +217,14 @@ const CustomerDetailModal = ({ customer, onClose, onDelete, onEdit }) => {
       <div className="flex-1 overflow-y-auto px-5 pb-8 space-y-4">
         {/* Stats row */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 text-center">
-            <span className="text-xs text-gray-500 block mb-1">Jami xaridlar</span>
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 text-center">
+            <span className="text-xs text-slate-500 block mb-1">Jami xaridlar</span>
             {totalSpentUsd > 0 && <span className="font-bold text-emerald-600 text-sm block">${totalSpentUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>}
-            {totalSpentUzs > 0 && <span className="font-bold text-gray-900 text-sm block">{totalSpentUzs.toLocaleString()} so'm</span>}
-            {!totalSpentUzs && !totalSpentUsd && <span className="font-bold text-gray-400 text-sm">—</span>}
+            {totalSpentUzs > 0 && <span className="font-bold text-slate-900 text-sm block">{totalSpentUzs.toLocaleString()} so'm</span>}
+            {!totalSpentUzs && !totalSpentUsd && <span className="font-bold text-slate-400 text-sm">—</span>}
           </div>
-          <div className={`rounded-2xl p-4 shadow-sm border text-center ${hasDebt ? 'bg-red-50 border-red-100' : 'bg-blue-50 border-blue-100'}`}>
-            <span className={`text-xs block mb-1 ${hasDebt ? 'text-red-500' : 'text-blue-600'}`}>Joriy qarz</span>
+          <div className={`rounded-2xl p-4 shadow-sm border text-center ${hasDebt ? 'bg-red-50 border-red-100' : 'bg-slate-50 border-slate-100'}`}>
+            <span className={`text-xs block mb-1 ${hasDebt ? 'text-red-500' : 'text-indigo-600'}`}>Joriy qarz</span>
             {hasDebt ? (
               <>
                 {debtUSD > 0 && <span className="font-bold text-sm text-red-600 block">${debtUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>}
@@ -236,20 +236,20 @@ const CustomerDetailModal = ({ customer, onClose, onDelete, onEdit }) => {
                 )}
               </>
             ) : (
-              <span className="font-bold text-sm text-blue-600">Qarsiz</span>
+              <span className="font-bold text-sm text-indigo-600">Qarsiz</span>
             )}
           </div>
         </div>
 
         {/* Info rows */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 divide-y divide-gray-50">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 divide-y divide-slate-50">
           <div className="flex items-center gap-3 p-4">
-            <div className="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center text-blue-500 shrink-0">
-              <FiMapPin className="w-4 h-4" />
+            <div className="w-9 h-9 bg-slate-50 rounded-xl flex items-center justify-center text-indigo-500 shrink-0">
+              <MapPin className="w-4 h-4" />
             </div>
             <div>
-              <span className="text-[10px] text-gray-400 block">Manzil</span>
-              <span className="text-sm font-medium text-gray-700">{detail.address || 'Kiritilmagan'}</span>
+              <span className="text-[10px] text-slate-400 block">Manzil</span>
+              <span className="text-sm font-medium text-slate-700">{detail.address || 'Kiritilmagan'}</span>
             </div>
           </div>
           <div className="flex flex-col p-4">
@@ -258,16 +258,16 @@ const CustomerDetailModal = ({ customer, onClose, onDelete, onEdit }) => {
               className="flex items-center justify-between w-full text-left"
             >
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center text-blue-500 shrink-0">
-                  <FiCalendar className="w-4 h-4" />
+                <div className="w-9 h-9 bg-slate-50 rounded-xl flex items-center justify-center text-indigo-500 shrink-0">
+                  <Calendar className="w-4 h-4" />
                 </div>
                 <div>
-                  <span className="text-[10px] text-gray-400 block">Savdolar tarixi</span>
-                  <span className="text-sm font-medium text-gray-700">{showHistory ? "Yopish" : "Ko'rish"}</span>
+                  <span className="text-[10px] text-slate-400 block">Savdolar tarixi</span>
+                  <span className="text-sm font-medium text-slate-700">{showHistory ? "Yopish" : "Ko'rish"}</span>
                 </div>
               </div>
-              <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center">
-                {showHistory ? <FiChevronUp className="w-4 h-4 text-gray-500" /> : <FiChevronDown className="w-4 h-4 text-gray-500" />}
+              <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center">
+                {showHistory ? <CaretUp className="w-4 h-4 text-slate-500" /> : <CaretDown className="w-4 h-4 text-slate-500" />}
               </div>
             </button>
             <AnimatePresence>
@@ -278,25 +278,25 @@ const CustomerDetailModal = ({ customer, onClose, onDelete, onEdit }) => {
                   exit={{ height: 0, opacity: 0 }}
                   className="overflow-hidden"
                 >
-                  <div className="pt-4 mt-2 border-t border-gray-100 space-y-3">
+                  <div className="pt-4 mt-2 border-t border-slate-100 space-y-3">
                     {historyLoading ? (
-                      <div className="py-4 flex justify-center"><FiLoader className="w-6 h-6 text-[#1447E6] animate-spin" /></div>
+                      <div className="py-4 flex justify-center"><Spinner className="w-6 h-6 text-[#6366f1] animate-spin" /></div>
                     ) : salesHistory.length > 0 ? (
                       salesHistory.map(sale => (
-                        <div key={sale.id} className="bg-gray-50 rounded-xl p-3 flex items-center justify-between">
+                        <div key={sale.id} className="bg-slate-50 rounded-xl p-3 flex items-center justify-between">
                           <div>
-                            <p className="text-xs font-bold text-gray-900">Xarid #{sale.id} • {sale.item_count} ta mahsulot</p>
-                            <p className="text-[10px] text-gray-400 mt-0.5">{new Date(sale.created_at).toLocaleString()}</p>
+                            <p className="text-xs font-bold text-slate-900">Xarid #{sale.id} • {sale.item_count} ta mahsulot</p>
+                            <p className="text-[10px] text-slate-400 mt-0.5">{new Date(sale.created_at).toLocaleString()}</p>
                           </div>
                           <div className="text-right">
-                            {parseFloat(sale.total_uzs || 0) > 0 && <p className="text-xs font-black text-[#1447E6]">{parseFloat(sale.total_uzs).toLocaleString()} so'm</p>}
+                            {parseFloat(sale.total_uzs || 0) > 0 && <p className="text-xs font-black text-[#6366f1]">{parseFloat(sale.total_uzs).toLocaleString()} so'm</p>}
                             {parseFloat(sale.total_usd || 0) > 0 && <p className="text-xs font-black text-emerald-600">${parseFloat(sale.total_usd).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>}
-                            <p className="text-[9px] font-bold text-gray-500">{sale.payment_method_display}</p>
+                            <p className="text-[9px] font-bold text-slate-500">{sale.payment_method_display}</p>
                           </div>
                         </div>
                       ))
                     ) : (
-                      <p className="text-xs text-center text-gray-400 py-2">Tarix bo'sh</p>
+                      <p className="text-xs text-center text-slate-400 py-2">Tarix bo'sh</p>
                     )}
                   </div>
                 </motion.div>
@@ -307,11 +307,11 @@ const CustomerDetailModal = ({ customer, onClose, onDelete, onEdit }) => {
           {detail.note && (
             <div className="flex items-center gap-3 p-4">
               <div className="w-9 h-9 bg-orange-50 rounded-xl flex items-center justify-center text-orange-500 shrink-0">
-                <FiFileText className="w-4 h-4" />
+                <FileText className="w-4 h-4" />
               </div>
               <div className="flex-1">
-                <span className="text-[10px] text-gray-400 block">Eslatma</span>
-                <span className="text-sm font-medium text-gray-700">{detail.note}</span>
+                <span className="text-[10px] text-slate-400 block">Eslatma</span>
+                <span className="text-sm font-medium text-slate-700">{detail.note}</span>
               </div>
             </div>
           )}
@@ -319,10 +319,10 @@ const CustomerDetailModal = ({ customer, onClose, onDelete, onEdit }) => {
           {hasDebt && debtDueDate && (
             <div className="flex items-center gap-3 p-4">
               <div className={`w-9 h-9 ${isDebtOverdue ? 'bg-red-50' : 'bg-orange-50'} rounded-xl flex items-center justify-center shrink-0`}>
-                <FiCalendar className={`w-4 h-4 ${isDebtOverdue ? 'text-red-400' : 'text-orange-400'}`} />
+                <Calendar className={`w-4 h-4 ${isDebtOverdue ? 'text-red-400' : 'text-orange-400'}`} />
               </div>
               <div className="flex-1">
-                <span className="text-[10px] text-gray-400 block">Qarz to'lash sanasi</span>
+                <span className="text-[10px] text-slate-400 block">Qarz to'lash sanasi</span>
                 <span className={`text-sm font-bold ${isDebtOverdue ? 'text-red-500' : 'text-orange-600'}`}>
                   {new Date(debtDueDate).toLocaleDateString('uz-UZ')}
                 </span>
@@ -334,14 +334,14 @@ const CustomerDetailModal = ({ customer, onClose, onDelete, onEdit }) => {
           )}
 
           <div className="flex items-center gap-3 px-4 py-3">
-            <div className={`w-9 h-9 ${isLinked ? 'bg-blue-50' : 'bg-gray-50'} rounded-xl flex items-center justify-center shrink-0`}>
-              <FiMessageCircle className={`w-4 h-4 ${isLinked ? 'text-blue-500' : 'text-gray-400'}`} />
+            <div className={`w-9 h-9 ${isLinked ? 'bg-slate-50' : 'bg-slate-50'} rounded-xl flex items-center justify-center shrink-0`}>
+              <ChatCircle className={`w-4 h-4 ${isLinked ? 'text-indigo-500' : 'text-slate-400'}`} />
             </div>
             <div>
-              <span className="text-[10px] text-gray-400 block">Telegram</span>
+              <span className="text-[10px] text-slate-400 block">Telegram</span>
               {isLinked
-                ? <span className="text-sm font-bold text-blue-600">Ulangan ✓</span>
-                : <span className="text-sm font-medium text-gray-400">Ulanmagan</span>
+                ? <span className="text-sm font-bold text-indigo-600">Ulangan ✓</span>
+                : <span className="text-sm font-medium text-slate-400">Ulanmagan</span>
               }
             </div>
           </div>
@@ -376,7 +376,7 @@ const CustomerDetailModal = ({ customer, onClose, onDelete, onEdit }) => {
                     onChange={e => setPayAmount(e.target.value)}
                     placeholder={payCurrency === 'uzs' ? "Miqdor (so'm)" : 'Miqdor ($)'}
                     max={payCurrency === 'uzs' ? debtUZS : debtUSD}
-                    className="flex-1 bg-white border border-red-200 rounded-xl py-3 px-4 text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-300"
+                    className="flex-1 bg-white border border-red-200 rounded-xl py-3 px-4 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-300"
                   />
                   <button
                     type="button"
@@ -390,7 +390,7 @@ const CustomerDetailModal = ({ customer, onClose, onDelete, onEdit }) => {
                   <button
                     type="button"
                     onClick={() => { setShowPayForm(false); setPayAmount(''); }}
-                    className="py-3 bg-white border border-gray-200 text-gray-600 rounded-xl font-semibold text-sm"
+                    className="py-3 bg-white border border-slate-200 text-slate-600 rounded-xl font-semibold text-sm"
                   >
                     Bekor
                   </button>
@@ -399,7 +399,7 @@ const CustomerDetailModal = ({ customer, onClose, onDelete, onEdit }) => {
                     disabled={payDebtMutation.isPending}
                     className="py-3 bg-emerald-600 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
                   >
-                    {payDebtMutation.isPending ? <FiLoader className="animate-spin w-4 h-4" /> : <FiCheckCircle className="w-4 h-4" />}
+                    {payDebtMutation.isPending ? <Spinner className="animate-spin w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
                     To'lash
                   </button>
                 </div>
@@ -413,14 +413,14 @@ const CustomerDetailModal = ({ customer, onClose, onDelete, onEdit }) => {
                   }}
                   className="bg-emerald-600 text-white rounded-2xl py-3.5 font-bold flex items-center justify-center gap-2 text-sm"
                 >
-                  <FiCreditCard className="w-4 h-4" /> Qarz To'lash
+                  <CreditCard className="w-4 h-4" /> Qarz To'lash
                 </button>
                 <button
                   onClick={handleSendReminder}
                   disabled={sendReminderMutation.isPending}
                   className="bg-orange-500 text-white rounded-2xl py-3.5 font-bold flex items-center justify-center gap-2 text-sm disabled:opacity-50"
                 >
-                  {sendReminderMutation.isPending ? <FiLoader className="animate-spin w-4 h-4" /> : <FiSend className="w-4 h-4" />}
+                  {sendReminderMutation.isPending ? <Spinner className="animate-spin w-4 h-4" /> : <PaperPlaneRight className="w-4 h-4" />}
                   Eslatma
                 </button>
               </div>
@@ -470,90 +470,90 @@ export const AddEditCustomerModal = ({ initialData, onClose, onSave, isPending }
         className="bg-white rounded-t-3xl px-5 pt-6 pb-8 relative w-full max-w-md mx-auto max-h-[90vh] overflow-y-auto"
       >
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-gray-900">{initialData ? 'Mijoz tahrirlash' : "Mijoz qo'shish"}</h2>
-          <button onClick={onClose} className="w-8 h-8 bg-gray-100 rounded-xl flex items-center justify-center text-gray-500">
-            <FiX className="w-4 h-4" />
+          <h2 className="text-xl font-bold text-slate-900">{initialData ? 'Mijoz tahrirlash' : "Mijoz qo'shish"}</h2>
+          <button onClick={onClose} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500">
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-xs font-semibold text-gray-500 block mb-1.5">Ism</label>
+            <label className="text-xs font-semibold text-slate-500 block mb-1.5">Ism</label>
             <input
               required
               name="name"
               value={formData.name}
               onChange={e => setFormData({ ...formData, name: e.target.value })}
               type="text"
-              className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3.5 px-4 text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1447E6]/20 focus:border-[#1447E6]"
+              className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3.5 px-4 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1]"
               placeholder="Ismni kiriting"
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-gray-500 block mb-1.5">Telefon</label>
+            <label className="text-xs font-semibold text-slate-500 block mb-1.5">Telefon</label>
             <input
               required
               name="phone"
               value={formData.phone}
               onChange={e => setFormData({ ...formData, phone: formatPhoneNumber(e.target.value) })}
               type="text"
-              className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3.5 px-4 text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1447E6]/20 focus:border-[#1447E6]"
+              className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3.5 px-4 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1]"
               placeholder="+998 90 123 45 67"
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-gray-500 block mb-1.5">Manzil</label>
+            <label className="text-xs font-semibold text-slate-500 block mb-1.5">Manzil</label>
             <input
               name="address"
               value={formData.address}
               onChange={e => setFormData({ ...formData, address: e.target.value })}
               type="text"
-              className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3.5 px-4 text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1447E6]/20 focus:border-[#1447E6]"
+              className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3.5 px-4 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1]"
               placeholder="Toshkent shahri"
             />
           </div>
           {initialData && (
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-semibold text-gray-500 block mb-1.5">Qarz (so'm)</label>
+                <label className="text-xs font-semibold text-slate-500 block mb-1.5">Qarz (so'm)</label>
                 <input
                   name="debt_uzs"
                   value={formData.debt_uzs}
                   onChange={e => setFormData({ ...formData, debt_uzs: e.target.value })}
                   type="number"
-                  className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3.5 px-4 text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1447E6]/20 focus:border-[#1447E6]"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3.5 px-4 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1]"
                   placeholder="0"
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-gray-500 block mb-1.5">Qarz ($)</label>
+                <label className="text-xs font-semibold text-slate-500 block mb-1.5">Qarz ($)</label>
                 <input
                   name="debt_usd"
                   value={formData.debt_usd}
                   onChange={e => setFormData({ ...formData, debt_usd: e.target.value })}
                   type="number"
-                  className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3.5 px-4 text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3.5 px-4 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400"
                   placeholder="0"
                 />
               </div>
             </div>
           )}
           <div>
-            <label className="text-xs font-semibold text-gray-500 block mb-1.5">Eslatma (Note)</label>
+            <label className="text-xs font-semibold text-slate-500 block mb-1.5">Eslatma (Note)</label>
             <textarea
               name="note"
               value={formData.note}
               onChange={e => setFormData({ ...formData, note: e.target.value })}
-              className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3.5 px-4 text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1447E6]/20 focus:border-[#1447E6] min-h-[80px]"
+              className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3.5 px-4 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1] min-h-[80px]"
               placeholder="Mijoz haqida eslatma..."
             />
           </div>
           <button
             type="submit"
             disabled={isPending}
-            className="w-full bg-[#1447E6] text-white rounded-2xl py-4 font-bold flex items-center justify-center mt-2 transition-colors shadow-lg shadow-blue-500/20"
+            className="w-full bg-[#6366f1] text-white rounded-2xl py-4 font-bold flex items-center justify-center mt-2 transition-colors shadow-lg shadow-indigo-500/20"
           >
-            {isPending ? <FiLoader className="animate-spin mr-2 w-4 h-4" /> : null}
+            {isPending ? <Spinner className="animate-spin mr-2 w-4 h-4" /> : null}
             {initialData ? 'O\'zgarishlarni saqlash' : 'Saqlash'}
           </button>
         </form>
@@ -630,20 +630,20 @@ const Customers = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F0F4FF] font-sans pb-32 md:pb-8">
-      <div className="bg-gradient-to-br from-[#1447E6] to-[#0F3CC7] px-5 md:px-8 pt-10 pb-8 relative overflow-hidden">
+    <div className="min-h-screen bg-[#f8fafc] font-sans pb-32 md:pb-8">
+      <div className="bg-gradient-to-br from-[#6366f1] to-[#4338ca] px-5 md:px-8 pt-10 pb-8 relative overflow-hidden">
         <div className="absolute -top-6 -right-6 w-28 h-28 bg-white/10 rounded-full" />
         <div className="absolute top-10 -right-4 w-16 h-16 bg-white/5 rounded-full" />
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-white text-2xl font-bold">Mijozlar</h1>
             <div className="flex items-center gap-2 mt-1">
-              <FiUsers className="text-blue-200 w-4 h-4" />
-              <span className="text-blue-200 text-sm">{isDebtorFilter ? customerList.length : (customersData?.count || 0)} ta mijoz</span>
+              <Users className="text-slate-200 w-4 h-4" />
+              <span className="text-slate-200 text-sm">{isDebtorFilter ? customerList.length : (customersData?.count || 0)} ta mijoz</span>
             </div>
           </div>
           <div className="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center">
-            <FiUsers className="text-white w-5 h-5" />
+            <Users className="text-white w-5 h-5" />
           </div>
         </div>
       </div>
@@ -651,14 +651,14 @@ const Customers = () => {
       <div className="px-4 md:px-8 -mt-3 relative z-10 max-w-6xl mx-auto">
         <div className="relative mb-4">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <FiSearch className="text-gray-400 w-4 h-4" />
+            <MagnifyingGlass className="text-slate-400 w-4 h-4" />
           </div>
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Mijoz qidirish..."
-            className="w-full bg-white border border-gray-100 rounded-2xl py-3.5 pl-11 pr-4 text-sm font-medium text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1447E6]/20 focus:border-[#1447E6]"
+            className="w-full bg-white border border-slate-100 rounded-2xl py-3.5 pl-11 pr-4 text-sm font-medium text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1]"
           />
         </div>
 
@@ -669,8 +669,8 @@ const Customers = () => {
               onClick={() => setActiveFilter(filter)}
               className={`whitespace-nowrap px-4 py-2 rounded-2xl text-xs font-bold transition-all shrink-0 ${
                 activeFilter === filter
-                  ? 'bg-[#1447E6] text-white shadow-sm'
-                  : 'bg-white text-gray-500 border border-gray-100 shadow-sm'
+                  ? 'bg-[#6366f1] text-white shadow-sm'
+                  : 'bg-white text-slate-500 border border-slate-100 shadow-sm'
               }`}
             >
               {filter}
@@ -681,7 +681,7 @@ const Customers = () => {
         <div className="mt-2 md:grid md:grid-cols-2 md:gap-3">
           {isLoading ? (
             <div className="flex justify-center py-20 md:col-span-2">
-              <FiLoader className="w-10 h-10 text-[#1447E6] animate-spin" />
+              <Spinner className="w-10 h-10 text-[#6366f1] animate-spin" />
             </div>
           ) : customerList.length > 0 ? (
             customerList.map((customer) => (
@@ -694,10 +694,10 @@ const Customers = () => {
               />
             ))
           ) : (
-            <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-200 shadow-sm">
-              <FiUsers className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500 text-sm font-medium mb-1">Mijozlar topilmadi</p>
-              <p className="text-xs text-gray-400">Yangi mijoz qo'shish uchun + tugmasini bosing</p>
+            <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-slate-200 shadow-sm">
+              <Users className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+              <p className="text-slate-500 text-sm font-medium mb-1">Mijozlar topilmadi</p>
+              <p className="text-xs text-slate-400">Yangi mijoz qo'shish uchun + tugmasini bosing</p>
             </div>
           )}
         </div>
@@ -705,9 +705,9 @@ const Customers = () => {
 
       <button
         onClick={() => { setCustomerToEdit(null); setIsAddEditModalOpen(true); }}
-        className="fixed bottom-24 right-5 w-14 h-14 bg-[#1447E6] rounded-2xl flex items-center justify-center shadow-lg shadow-blue-600/30 text-white z-40 active:scale-95 transition-transform"
+        className="fixed bottom-24 right-5 w-14 h-14 bg-[#6366f1] rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-600/30 text-white z-40 active:scale-95 transition-transform"
       >
-        <FiPlus className="w-6 h-6" />
+        <Plus className="w-6 h-6" />
       </button>
 
       <AnimatePresence>
