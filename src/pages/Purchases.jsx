@@ -15,20 +15,27 @@ const fmt = (num) => parseFloat(num || 0).toLocaleString('uz-UZ');
 const getProductCurrency = (product) => (product?.currency || 'uzs').toLowerCase();
 
 const getProductCostPrice = (product) => {
-  // Tan narx kiritilgan bo'lsa o'shani, aks holda sotuv narxini boshlang'ich qiymat qilamiz
   const cost = parseFloat(product?.cost_price || 0);
   if (cost > 0) return cost;
   return parseFloat(product?.sale_price || 0);
 };
+
+const paymentMethods = [
+  { id: 'cash', label: 'Naqd' },
+  { id: 'card', label: 'Karta' },
+  { id: 'debt', label: 'Nasiya' },
+  { id: 'transfer', label: "O'tkazma" },
+];
 
 const Purchases = () => {
   const [viewPurchase, setViewPurchase] = useState(null);
   const [modalMode, setModalMode] = useState(null); // 'create' | 'edit' | null
   const [editPurchaseId, setEditPurchaseId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [cart, setCart] = useState([]); // { id, name, quantity, costPrice }
+  const [cart, setCart] = useState([]);
   const [productSearch, setProductSearch] = useState('');
   const [note, setNote] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('cash');
 
   const { data: purchasesData, isLoading: purchasesLoading } = usePurchases();
   const { data: purchaseDetail, isLoading: detailLoading } = usePurchaseDetail(viewPurchase?.id);
@@ -59,18 +66,25 @@ const Purchases = () => {
     ? purchases.filter(p => p.id?.toString().includes(searchTerm))
     : purchases;
 
-  const addToCart = (product) => {
-    const costPrice = getProductCostPrice(product);
-    const currency = getProductCurrency(product);
-    const existing = cart.find(item => item.id === product.id);
+  const addToCart = (item) => {
+    const costPrice = parseFloat(item.cost_price || 0) > 0 ? parseFloat(item.cost_price || 0) : parseFloat(item.sale_price || 0);
+    const currency = (item.currency || 'uzs').toLowerCase();
+    
+    const cartId = item.isVariant ? `v-${item.id}` : `p-${item.id}`;
+    const existing = cart.find(c => c.cartId === cartId);
+    
     if (existing) {
-      setCart(cart.map(item =>
-        item.id === product.id ? { ...item, quantity: (parseInt(item.quantity) || 0) + 1, costPrice, currency } : item
+      setCart(cart.map(c =>
+        c.cartId === cartId ? { ...c, quantity: (parseInt(c.quantity) || 0) + 1, costPrice, currency } : c
       ));
     } else {
       setCart([...cart, {
-        id: product.id,
-        name: product.name,
+        cartId,
+        productId: item.productId,
+        variantId: item.isVariant ? item.id : null,
+        productName: item.productName,
+        variantName: item.isVariant ? item.name : null,
+        name: item.isVariant ? `${item.productName} (${item.name})` : item.productName,
         quantity: 1,
         costPrice,
         currency
@@ -78,11 +92,14 @@ const Purchases = () => {
     }
   };
 
-  const removeFromCart = (id) => setCart(cart.filter(item => item.id !== id));
+  const removeFromCart = (cartId) => {
+    setCart(cart.filter(item => item.cartId !== cartId));
+  };
 
   const openCreateModal = () => {
     setCart([]);
     setNote('');
+    setPaymentMethod('cash');
     setEditPurchaseId(null);
     setModalMode('create');
   };
@@ -90,14 +107,19 @@ const Purchases = () => {
   const openEditModal = (purchase) => {
     setCart(
       (purchase.items || []).map(item => ({
-        id: item.product,
-        name: item.product_name,
+        cartId: item.variant ? `v-${item.variant}` : `p-${item.product}`,
+        productId: item.product,
+        variantId: item.variant,
+        productName: item.product_name,
+        variantName: item.variant_name,
+        name: item.variant_name ? `${item.product_name} (${item.variant_name})` : item.product_name,
         quantity: item.quantity,
         costPrice: parseFloat(item.cost_price || 0),
         currency: (item.currency || 'uzs').toLowerCase()
       }))
     );
     setNote(purchase.note || '');
+    setPaymentMethod(purchase.payment_method || 'cash');
     setEditPurchaseId(purchase.id);
     setModalMode('edit');
   };
@@ -109,18 +131,42 @@ const Purchases = () => {
     }
     try {
       if (modalMode === 'create') {
+        const total_uzs = cart.reduce((sum, item) => item.currency === 'uzs' ? sum + (item.quantity * item.costPrice) : sum, 0);
+        const total_usd = cart.reduce((sum, item) => item.currency === 'usd' ? sum + (item.quantity * item.costPrice) : sum, 0);
+
         await createPurchaseMutation.mutateAsync({
           items: cart.map(item => ({
-            product: item.id,
+            product: item.productId,
+            ...(item.variantId ? { variant: item.variantId } : {}),
             quantity: parseInt(item.quantity) || 1,
             cost_price: parseFloat(item.costPrice || 0).toFixed(2),
             currency: item.currency || 'uzs'
           })),
+          total_uzs: total_uzs.toFixed(2),
+          total_usd: total_usd.toFixed(2),
+          payment_method: paymentMethod,
           note
         });
       } else {
-        // PatchedPurchaseRequest: only note, supplier, payment_method (no items)
-        await updatePurchaseMutation.mutateAsync({ id: editPurchaseId, data: { note } });
+        // include items and totals when updating a purchase
+        const total_uzs = cart.reduce((sum, item) => item.currency === 'uzs' ? sum + (item.quantity * item.costPrice) : sum, 0);
+        const total_usd = cart.reduce((sum, item) => item.currency === 'usd' ? sum + (item.quantity * item.costPrice) : sum, 0);
+        await updatePurchaseMutation.mutateAsync({
+          id: editPurchaseId,
+          data: {
+            items: cart.map(item => ({
+              product: item.productId,
+              ...(item.variantId ? { variant: item.variantId } : {}),
+              quantity: parseInt(item.quantity) || 1,
+              cost_price: parseFloat(item.costPrice || 0).toFixed(2),
+              currency: item.currency || 'uzs'
+            })),
+            total_uzs: total_uzs.toFixed(2),
+            total_usd: total_usd.toFixed(2),
+            payment_method: paymentMethod,
+            note
+          }
+        });
       }
       setModalMode(null);
     } catch (_) {}
@@ -176,8 +222,12 @@ const Purchases = () => {
                     <h3 className="font-bold text-slate-900 text-sm truncate max-w-[160px]">
                       {purchase.note ? purchase.note : `Xarid #${purchase.id}`}
                     </h3>
-                    <p className="text-[10px] text-slate-400 mt-0.5">
-                      {new Date(purchase.created_at).toLocaleDateString()} • {getItemsCount(purchase.id) ?? '...'} ta mahsulot
+                    <p className="text-[10px] text-slate-400 mt-0.5 flex items-center gap-1.5">
+                      {new Date(purchase.created_at).toLocaleDateString()}
+                      <span>•</span>
+                      {getItemsCount(purchase.id) ?? '...'} ta
+                      <span>•</span>
+                      <span className="font-semibold text-slate-600">{purchase.payment_method_display || paymentMethods.find(p => p.id === purchase.payment_method)?.label || purchase.payment_method}</span>
                     </p>
                   </div>
                 </div>
@@ -252,44 +302,58 @@ const Purchases = () => {
               </div>
 
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {/* Product search */}
-                <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
-                  <div className="flex items-center justify-between mb-3">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Mahsulot qo'shish</label>
-                    <div className="relative w-40">
-                      <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-3.5 h-3.5" />
-                      <input
-                        type="text"
-                        placeholder="Qidirish..."
-                        value={productSearch}
-                        onChange={e => setProductSearch(e.target.value)}
-                        className="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-100 rounded-xl text-xs focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1] outline-none"
-                      />
+                {modalMode === 'create' && (
+                  <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+                    <div className="flex items-center justify-between mb-3">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Mahsulot qo'shish</label>
+                      <div className="relative w-40">
+                        <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-3.5 h-3.5" />
+                        <input
+                          type="text"
+                          placeholder="Qidirish..."
+                          value={productSearch}
+                          onChange={e => setProductSearch(e.target.value)}
+                          className="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-100 rounded-xl text-xs focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1] outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2.5 max-h-[320px] overflow-y-auto pr-1">
+                      {products.flatMap(p => {
+                        const items = p.variants?.length > 0 
+                          ? p.variants.map(v => ({ ...v, productId: p.id, productName: p.name, isVariant: true }))
+                          : [{ ...p, productId: p.id, productName: p.name, isVariant: false }];
+                        
+                        return items.map(item => {
+                          const currency = (item.currency || 'uzs').toLowerCase();
+                          const costPrice = parseFloat(item.cost_price || 0) > 0 ? parseFloat(item.cost_price || 0) : parseFloat(item.sale_price || 0);
+                          return (
+                            <button
+                              key={item.isVariant ? `v-${item.id}` : `p-${item.id}`}
+                              onClick={() => addToCart(item)}
+                              className="group cursor-pointer bg-white rounded-2xl p-3 border border-slate-100 hover:border-[#6366f1] hover:shadow-md active:scale-95 transition-all text-left"
+                            >
+                              <div className="flex items-start justify-between mb-2">
+                                <div className="w-8 h-8 bg-slate-50 rounded-xl flex items-center justify-center">
+                                  <Package className="w-4 h-4 text-[#6366f1]" />
+                                </div>
+                                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-lg ${(item.quantity || 0) <= 0 ? 'bg-red-50 text-red-500' : 'bg-emerald-50 text-emerald-600'}`}>
+                                  {(item.quantity || 0) <= 0 ? "Yo'q" : `${item.quantity || 0} ${item.unit || 'dona'}`}
+                                </span>
+                              </div>
+                              <div className="mb-1.5">
+                                <h4 className="font-semibold text-slate-800 text-xs truncate leading-tight">{item.productName}</h4>
+                                {item.isVariant && <p className="text-[10px] text-slate-500 font-medium truncate mt-0.5">{item.name}</p>}
+                              </div>
+                              <p className={`text-xs font-bold leading-tight ${currency === 'usd' ? 'text-emerald-600' : 'text-[#6366f1]'}`}>
+                                {currency === 'usd' ? `$${fmt(costPrice)}` : `${fmt(costPrice)} so'm`}
+                              </p>
+                            </button>
+                          );
+                        });
+                      })}
                     </div>
                   </div>
-                  <div className="flex gap-3 overflow-x-auto pb-2">
-                    {products.map(p => {
-                      const productCurrency = getProductCurrency(p);
-                      const productCostPrice = getProductCostPrice(p);
-                      return (
-                        <button
-                          key={p.id}
-                          onClick={() => addToCart(p)}
-                          className="shrink-0 w-32 p-3 bg-slate-50 border border-slate-100 rounded-2xl hover:border-[#6366f1] hover:shadow-sm transition-all active:scale-95 text-left"
-                        >
-                          <div className="w-9 h-9 bg-slate-50 rounded-xl flex items-center justify-center text-[#6366f1] mb-2">
-                            <Package className="w-4 h-4" />
-                          </div>
-                          <p className="text-[10px] font-bold text-slate-900 truncate">{p.name}</p>
-                          <p className="text-[9px] text-slate-400 mt-0.5">Ombor: {p.quantity} {p.unit}</p>
-                          <p className={`text-[10px] font-black mt-1 ${productCurrency === 'usd' ? 'text-emerald-600' : 'text-[#6366f1]'}`}>
-                            {productCurrency === 'usd' ? `$${fmt(productCostPrice)}` : `${fmt(productCostPrice)} so'm`}
-                          </p>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                )}
 
                 {/* Cart */}
                 {cart.length > 0 && (
@@ -299,64 +363,89 @@ const Purchases = () => {
                       <span className="bg-slate-50 text-[#6366f1] px-2.5 py-1 rounded-xl text-xs font-bold">{cart.length} ta</span>
                     </div>
                     <div className="divide-y divide-slate-50">
-                      {cart.map(item => (
-                        <div key={item.id} className="px-4 py-3">
-                          {/* Name + price + delete */}
-                          <div className="flex items-center justify-between mb-2.5">
-                            <div className="flex-1 min-w-0 pr-3">
-                              <p className="font-bold text-slate-900 text-sm truncate">{item.name}</p>
-                              <p className={`text-xs font-bold ${item.currency === 'usd' ? 'text-emerald-600' : 'text-[#6366f1]'}`}>
-                                {item.currency === 'usd' ? `$${fmt(item.costPrice)}` : `${fmt(item.costPrice)} so'm`}
-                              </p>
+                      {cart.map(item => {
+                        const isUsd = item.currency === 'usd';
+                        const priceLabel = isUsd ? `$${fmt(item.costPrice)}` : `${fmt(item.costPrice)} so'm`;
+                        const totalLabel = isUsd
+                          ? `$${fmt(item.costPrice * item.quantity)}`
+                          : `${fmt(item.costPrice * item.quantity)} so'm`;
+                        return (
+                          <div key={item.cartId} className="px-4 py-3">
+                            <div className="flex items-center justify-between mb-2.5">
+                              <div className="flex-1 min-w-0 pr-2">
+                                <h4 className="font-bold text-slate-900 text-sm truncate">{item.productName || item.name}</h4>
+                                {item.variantName && (
+                                  <p className="text-[10px] text-slate-500 font-medium truncate mb-0.5">{item.variantName}</p>
+                                )}
+                                <p className="text-xs text-slate-400">{priceLabel} × {item.quantity}</p>
+                              </div>
+                              <p className={`text-sm font-black shrink-0 ${isUsd ? 'text-emerald-600' : 'text-[#6366f1]'}`}>{totalLabel}</p>
                             </div>
-                            <button
-                              onClick={() => removeFromCart(item.id)}
-                              className="w-8 h-8 flex items-center justify-center text-slate-300 hover:text-red-400 active:scale-90 transition-all shrink-0"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => (modalMode === 'create' || modalMode === 'edit') && setCart(cart.map(c => c.cartId === item.cartId ? { ...c, quantity: Math.max(1, (parseInt(c.quantity) || 1) - 1) } : c))}
+                                disabled={!['create','edit'].includes(modalMode)}
+                                className="w-11 h-11 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 active:scale-90 transition-all disabled:opacity-50"
+                              >
+                                <Minus className="w-5 h-5" />
+                              </button>
+                              <input
+                                type="number"
+                                min="1"
+                                value={item.quantity}
+                                disabled={!['create','edit'].includes(modalMode)}
+                                onChange={(e) => setCart(cart.map(c => c.cartId === item.cartId ? { ...c, quantity: e.target.value } : c))}
+                                onBlur={(e) => {
+                                  const val = parseInt(e.target.value) || 1;
+                                  setCart(cart.map(c => c.cartId === item.cartId ? { ...c, quantity: val } : c));
+                                }}
+                                className="flex-1 h-11 text-center font-black text-slate-900 text-lg bg-slate-50 rounded-2xl outline-none border border-slate-100 focus:border-[#6366f1] disabled:opacity-70 disabled:bg-slate-100"
+                              />
+                              <button
+                                onClick={() => (modalMode === 'create' || modalMode === 'edit') && setCart(cart.map(c => c.cartId === item.cartId ? { ...c, quantity: (parseInt(c.quantity) || 1) + 1 } : c))}
+                                disabled={!['create','edit'].includes(modalMode)}
+                                className="w-11 h-11 rounded-2xl bg-[#6366f1] flex items-center justify-center text-white hover:bg-blue-700 active:scale-90 transition-all disabled:opacity-50"
+                              >
+                                <Plus className="w-5 h-5" />
+                              </button>
+                              {['create','edit'].includes(modalMode) && (
+                                <button
+                                  onClick={() => removeFromCart(item.cartId)}
+                                  className="w-11 h-11 rounded-2xl bg-red-500 flex items-center justify-center text-white hover:bg-red-600 active:scale-90 transition-all"
+                                >
+                                  <X className="w-5 h-5" />
+                                </button>
+                              )}
+                            </div>
                           </div>
-                          {/* Big +/- quantity */}
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => setCart(cart.map(c => c.id === item.id ? { ...c, quantity: Math.max(1, (parseInt(c.quantity) || 1) - 1) } : c))}
-                              className="w-11 h-11 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-red-50 hover:text-red-500 active:scale-90 transition-all"
-                            >
-                              <Minus className="w-5 h-5" />
-                            </button>
-                            <input
-                              type="number"
-                              min="1"
-                              value={item.quantity}
-                              onChange={(e) => setCart(cart.map(c => c.id === item.id ? { ...c, quantity: e.target.value } : c))}
-                              onBlur={(e) => {
-                                const val = parseInt(e.target.value) || 1;
-                                setCart(cart.map(c => c.id === item.id ? { ...c, quantity: val } : c));
-                              }}
-                              className="flex-1 h-11 text-center font-black text-slate-900 text-lg bg-slate-50 rounded-2xl outline-none border border-slate-100 focus:border-[#6366f1]"
-                            />
-                            <button
-                              onClick={() => setCart(cart.map(c => c.id === item.id ? { ...c, quantity: (parseInt(c.quantity) || 1) + 1 } : c))}
-                              className="w-11 h-11 rounded-2xl bg-[#6366f1] flex items-center justify-center text-white hover:bg-blue-700 active:scale-90 transition-all"
-                            >
-                              <Plus className="w-5 h-5" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}
 
-                {/* Note */}
-                <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Izoh (ixtiyoriy)</label>
-                  <textarea
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                    placeholder="Xarid haqida izoh..."
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 text-xs focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1] outline-none min-h-[70px] resize-none"
-                  />
+                <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-4">
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">To'lov usuli</label>
+                    <select
+                      value={paymentMethod}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 text-xs font-semibold focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1] outline-none"
+                    >
+                      {paymentMethods.map(method => (
+                        <option key={method.id} value={method.id}>{method.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Izoh (ixtiyoriy)</label>
+                    <textarea
+                      value={note}
+                      onChange={(e) => setNote(e.target.value)}
+                      placeholder="Xarid haqida izoh..."
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 text-xs focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1] outline-none min-h-[70px] resize-none"
+                    />
+                  </div>
                 </div>
               </div>
 

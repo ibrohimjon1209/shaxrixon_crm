@@ -228,11 +228,8 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, submitLabel,
               };
               const removeVariant = () => requestRemoveVariant(variant, idx);
               return (
-                <div key={idx} className="bg-slate-50 p-3 rounded-2xl relative border border-slate-200">
-                  <button type="button" onClick={removeVariant} className="absolute top-2 right-2 text-slate-400 hover:text-red-500 transition-colors">
-                    <X className="w-4 h-4" />
-                  </button>
-                  <div className="grid grid-cols-2 gap-3 pr-6 mb-3">
+                <div key={idx} className="bg-slate-50 p-3 rounded-2xl border border-slate-200">
+                  <div className="grid grid-cols-2 gap-3 mb-3">
                     <div>
                       <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Nomi</label>
                       <input value={variant.name || ''} onChange={e => updateVariant('name', e.target.value)} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none" placeholder="Masalan: XL, Qizil" />
@@ -259,14 +256,22 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, submitLabel,
                       </select>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-3 mb-3">
                     <div>
                       <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Miqdor</label>
-                      <input type="number" value={variant.quantity || ''} onChange={e => updateVariant('quantity', e.target.value)} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none" placeholder="0" />
+                      <div className="flex items-center gap-1.5">
+                        <button type="button" onClick={() => updateVariant('quantity', Math.max(0, (parseInt(variant.quantity) || 0) - 1))} className="w-9 h-9 rounded-xl bg-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-300 active:scale-90 transition-all shrink-0">
+                          <Minus className="w-4 h-4" />
+                        </button>
+                        <input type="number" value={variant.quantity || ''} onChange={e => updateVariant('quantity', e.target.value)} className="flex-1 h-9 text-center font-bold text-slate-900 bg-white border border-slate-200 rounded-xl text-xs outline-none focus:border-[#6366f1]" placeholder="0" />
+                        <button type="button" onClick={() => updateVariant('quantity', (parseInt(variant.quantity) || 0) + 1)} className="w-9 h-9 rounded-xl bg-[#6366f1] flex items-center justify-center text-white hover:bg-blue-700 active:scale-90 transition-all shrink-0">
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                     <div>
                       <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Birlik</label>
-                      <select value={variant.unit || 'dona'} onChange={e => updateVariant('unit', e.target.value)} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none">
+                      <select value={variant.unit || 'dona'} onChange={e => updateVariant('unit', e.target.value)} className="w-full h-9 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none">
                         <option value="dona">Dona</option>
                         <option value="kg">Kg</option>
                         <option value="litr">Litr</option>
@@ -274,6 +279,9 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, submitLabel,
                       </select>
                     </div>
                   </div>
+                  <button type="button" onClick={removeVariant} className="w-full py-2 bg-red-50 text-red-500 rounded-xl text-xs font-bold hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-1.5">
+                    <X className="w-3.5 h-3.5" /> O'chirish
+                  </button>
                 </div>
               );
             })}

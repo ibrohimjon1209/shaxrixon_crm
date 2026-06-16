@@ -395,6 +395,8 @@ const Sales = () => {
         id: cartId, // for react keys and internal logic
         productId: product.id,
         variantId: variant ? variant.id : null,
+        productName: product.name,
+        variantName: variant ? variant.name : null,
         name: variant ? `${product.name} (${variant.name})` : product.name,
         price: salePrice,
         price_uzs: priceUzs,
@@ -695,7 +697,10 @@ const Sales = () => {
                     {/* Top row: name + total */}
                     <div className="flex items-center justify-between mb-2.5">
                       <div className="flex-1 min-w-0 pr-2">
-                        <p className="font-bold text-slate-900 text-sm truncate">{item.name}</p>
+                        <h4 className="font-bold text-slate-900 text-sm truncate">{item.productName || item.name}</h4>
+                        {item.variantName && (
+                          <p className="text-[10px] text-slate-500 font-medium truncate mb-0.5">{item.variantName}</p>
+                        )}
                         <p className="text-xs text-slate-400">{priceLabel} × {item.quantity}</p>
                       </div>
                       <p className={`text-sm font-black shrink-0 ${isUsd ? 'text-emerald-600' : 'text-[#6366f1]'}`}>{totalLabel}</p>
