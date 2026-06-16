@@ -151,7 +151,7 @@ const Reports = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <StatCard
                 icon={CurrencyDollar} bg="bg-emerald-50" color="text-emerald-600"
-                title="Tushum ($)"
+                title="Tushum"
                 value={`$${fmt(revUSD)}`}
                 sub={`${fmt(revUZS)} so'm`}
                 loading={dashLoading}

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Phone, LockKey, Eye, EyeSlash } from '@phosphor-icons/react';
 import { useAuth } from '../context/AuthContext';
 import { formatPhoneNumber, cleanPhoneNumber } from '../utils/phoneFormat';
+import main_logo from "./imgs/shaxrixon_balon_logo.png";
 
 const Login = () => {
   const { login } = useAuth();
@@ -95,12 +96,12 @@ const Login = () => {
           {/* Header Section */}
           <div className="text-center mb-10">
             {/* Logo */}
-            <div className="w-20 h-20 bg-indigo-600 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg">
-              <span className="text-4xl font-bold text-white">B</span>
+            <div className="w-20 h-20 rounded-2xl mx-auto mb-4 flex items-center justify-center overflow-hidden shadow-lg">
+              <img src={main_logo} alt="" />
             </div>
             
             {/* App name */}
-            <h1 className="text-3xl font-bold text-slate-900 mb-2">BiCRM</h1>
+            <h1 className="text-3xl font-bold text-slate-900 mb-2">ShCRM</h1>
             
             {/* Tagline */}
             <p className="text-sm text-slate-600">Biznesingizni oson va tez boshqaring</p>
