@@ -184,10 +184,17 @@ const CustomerDetailModal = ({ customer, onClose, onDelete, onEdit }) => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 80 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[100] bg-[#f8fafc] md:bg-black/60 md:backdrop-blur-sm md:flex md:items-center md:justify-center md:p-6"
+    >
+    <motion.div
+      initial={{ opacity: 0, y: 60 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 80 }}
-      className="fixed inset-0 z-[100] bg-[#f8fafc] flex flex-col"
+      exit={{ opacity: 0, y: 60 }}
+      transition={{ duration: 0.2, ease: 'easeOut' }}
+      className="w-full h-full md:h-auto md:max-h-[92vh] md:max-w-4xl md:rounded-3xl md:overflow-hidden bg-[#f8fafc] flex flex-col md:shadow-2xl"
     >
       {/* Header */}
       <div className="bg-gradient-to-br from-[#6366f1] to-[#4338ca] px-5 pt-12 pb-20 relative overflow-hidden">
@@ -444,6 +451,7 @@ const CustomerDetailModal = ({ customer, onClose, onDelete, onEdit }) => {
         )}
       </div>
     </motion.div>
+    </motion.div>
   );
 };
 
@@ -476,13 +484,14 @@ export const AddEditCustomerModal = ({ initialData, onClose, onSave, isPending }
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[110] bg-black/40 flex flex-col justify-end"
+      className="fixed inset-0 z-[110] bg-black/40 backdrop-blur-sm flex flex-col justify-end md:items-center md:justify-center md:p-6"
     >
       <motion.div
-        initial={{ y: 300 }}
-        animate={{ y: 0 }}
-        exit={{ y: 300 }}
-        className="bg-white rounded-t-3xl px-5 pt-6 pb-8 relative w-full max-w-md mx-auto max-h-[90vh] overflow-y-auto"
+        initial={{ y: 300, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 300, opacity: 0 }}
+        transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+        className="bg-white rounded-t-3xl md:rounded-3xl px-5 pt-6 pb-8 relative w-full md:max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl"
       >
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-slate-900">{initialData ? 'Mijoz tahrirlash' : "Mijoz qo'shish"}</h2>

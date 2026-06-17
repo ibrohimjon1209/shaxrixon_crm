@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Plus, Minus, MagnifyingGlass, Package, Truck, X, Check,
   Spinner, Trash, PencilSimple, CaretRight
@@ -34,6 +34,14 @@ const Purchases = () => {
   const [showVariantModal, setShowVariantModal] = useState(false);
   const [selectedProductForVariants, setSelectedProductForVariants] = useState(null);
 
+  const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 768);
+
+  useEffect(() => {
+    const handler = () => setIsDesktop(window.innerWidth >= 768);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+
   const { data: purchasesData, isLoading: purchasesLoading } = usePurchases();
   const { data: purchaseDetail, isLoading: detailLoading } = usePurchaseDetail(viewPurchase?.id);
   const { data: productsData } = useProducts({ search: productSearch });
@@ -51,8 +59,12 @@ const Purchases = () => {
 
   const handleProductClick = (product) => {
     if (product.has_variants && product.variants?.length > 0) {
-      setSelectedProductForVariants(product);
-      setShowVariantModal(true);
+      if (product.variants.length === 1) {
+        addToCart(product, product.variants[0]);
+      } else {
+        setSelectedProductForVariants(product);
+        setShowVariantModal(true);
+      }
     } else {
       addToCart(product, null);
     }
@@ -252,12 +264,14 @@ const Purchases = () => {
         {modalMode && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex flex-col justify-end"
+            className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex flex-col justify-end md:items-center md:justify-center md:p-6"
           >
             <motion.div
-              initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="bg-[#f8fafc] rounded-t-3xl w-full max-w-2xl mx-auto h-[92vh] flex flex-col overflow-hidden"
+              initial={isDesktop ? { opacity: 0, scale: 0.95, y: 0 } : { y: '100%' }}
+              animate={isDesktop ? { opacity: 1, scale: 1, y: 0 } : { y: 0 }}
+              exit={isDesktop ? { opacity: 0, scale: 0.95, y: 0 } : { y: '100%' }}
+              transition={isDesktop ? { duration: 0.2, ease: 'easeOut' } : { type: 'spring', damping: 30, stiffness: 300 }}
+              className="bg-[#f8fafc] rounded-t-3xl md:rounded-3xl w-full max-w-4xl mx-auto h-[92vh] md:h-auto md:max-h-[92vh] flex flex-col overflow-hidden shadow-2xl"
             >
               {/* Modal header */}
               <div className="bg-gradient-to-br from-[#6366f1] to-[#4338ca] px-5 pt-6 pb-5 flex items-center justify-between shrink-0">
@@ -288,7 +302,7 @@ const Purchases = () => {
                       />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-2.5 max-h-[320px] overflow-y-auto pr-1">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5 max-h-[320px] md:max-h-[380px] overflow-y-auto pr-1">
                     {products.map((product) => {
                       const isUzsProduct = (product.currency || 'uzs').toLowerCase() === 'uzs';
                       const rawCost = product.cost_price;
@@ -315,9 +329,13 @@ const Purchases = () => {
                           <div className="flex items-center justify-between">
                             <div className="flex flex-col gap-0.5">
                               {product.has_variants ? (
-                                <p className="text-slate-500 font-bold text-[10px] leading-tight">
-                                  {product.variant_count} ta variant
-                                </p>
+                                product.variants?.length === 1 ? (
+                                  <p className="text-slate-500 font-bold text-[10px] leading-tight truncate">{product.variants[0].name}</p>
+                                ) : (
+                                  <p className="text-slate-500 font-bold text-[10px] leading-tight">
+                                    {product.variant_count} ta variant
+                                  </p>
+                                )
                               ) : (
                                 <>
                                   {costUzs > 0 && <p className="text-[#6366f1] font-bold text-xs leading-tight">{costUzs.toLocaleString()} so'm</p>}
@@ -326,7 +344,7 @@ const Purchases = () => {
                               )}
                             </div>
                             <div className="w-6 h-6 bg-slate-50 text-[#6366f1] rounded-lg flex items-center justify-center group-hover:bg-[#6366f1] group-hover:text-white transition-colors">
-                              {product.has_variants ? <CaretRight className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
+                              {product.has_variants && product.variants?.length !== 1 ? <CaretRight className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
                             </div>
                           </div>
                         </button>
@@ -432,12 +450,15 @@ const Purchases = () => {
         {showVariantModal && selectedProductForVariants && (
           <motion.div
             variants={backdropVariants} initial="hidden" animate="visible" exit="exit"
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[110] flex items-end"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[110] flex items-end md:items-center md:justify-center md:p-6"
             onClick={() => setShowVariantModal(false)}
           >
             <motion.div
-              variants={modalVariants} initial="hidden" animate="visible" exit="exit"
-              className="bg-white rounded-t-3xl w-full max-h-[90vh] overflow-hidden flex flex-col origin-bottom"
+              variants={isDesktop
+                ? { hidden: { opacity: 0, scale: 0.95 }, visible: { opacity: 1, scale: 1, transition: { duration: 0.2, ease: 'easeOut' } }, exit: { opacity: 0, scale: 0.95, transition: { duration: 0.15, ease: 'easeIn' } } }
+                : modalVariants}
+              initial="hidden" animate="visible" exit="exit"
+              className="bg-white rounded-t-3xl md:rounded-3xl w-full md:max-w-3xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
@@ -487,12 +508,13 @@ const Purchases = () => {
       {/* View Detail Modal */}
       <AnimatePresence>
         {viewPurchase && (
-          <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 md:p-8">
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-3xl w-full max-w-md max-h-[85vh] overflow-y-auto flex flex-col shadow-2xl relative"
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              className="bg-white rounded-3xl w-full max-w-lg md:max-w-3xl max-h-[85vh] md:max-h-[85vh] overflow-y-auto flex flex-col shadow-2xl relative"
             >
               {detailLoading && (
                 <div className="absolute inset-0 bg-white/60 z-10 flex items-center justify-center rounded-3xl">

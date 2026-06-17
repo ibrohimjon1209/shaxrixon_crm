@@ -983,8 +983,8 @@ const Warehouse = () => {
 
       {/* Add Product Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-end" onClick={() => { setShowAddModal(false); resetForm(); }}>
-          <div className="bg-white rounded-t-3xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-end md:items-center md:justify-center md:p-6" onClick={() => { setShowAddModal(false); resetForm(); }}>
+          <div className="bg-white rounded-t-3xl md:rounded-3xl w-full md:max-w-4xl max-h-[90vh] md:max-h-[92vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="sticky top-0 bg-white border-b border-slate-100 px-5 py-4 flex items-center justify-between">
               <h2 className="text-lg font-bold text-slate-900">Mahsulot qo'shish</h2>
               <button onClick={() => { setShowAddModal(false); resetForm(); }} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500">
@@ -998,8 +998,8 @@ const Warehouse = () => {
 
       {/* Edit Product Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-end" onClick={() => { setShowEditModal(false); resetForm(); }}>
-          <div className="bg-white rounded-t-3xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-end md:items-center md:justify-center md:p-6" onClick={() => { setShowEditModal(false); resetForm(); }}>
+          <div className="bg-white rounded-t-3xl md:rounded-3xl w-full md:max-w-4xl max-h-[90vh] md:max-h-[92vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="sticky top-0 bg-white border-b border-slate-100 px-5 py-4 flex items-center justify-between">
               <h2 className="text-lg font-bold text-slate-900">Mahsulotni tahrirlash</h2>
               <button onClick={() => { setShowEditModal(false); resetForm(); }} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500">
@@ -1049,7 +1049,7 @@ const Warehouse = () => {
       {/* Category Stats Modal */}
       {showCategoryStats && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-end md:items-center md:justify-center" onClick={() => { setShowCategoryStats(false); setSelectedCategory(null); }}>
-          <div className="bg-[#f8fafc] rounded-t-3xl md:rounded-3xl w-full md:max-w-lg max-h-[88vh] overflow-hidden flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-[#f8fafc] rounded-t-3xl md:rounded-3xl w-full md:max-w-4xl max-h-[88vh] overflow-hidden flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
             {/* Modal header */}
             <div className="bg-gradient-to-br from-[#6366f1] to-[#4338ca] px-5 pt-6 pb-5 shrink-0 relative overflow-hidden">
               <div className="absolute -top-6 -right-6 w-24 h-24 bg-white/10 rounded-full" />
@@ -1330,8 +1330,8 @@ const Warehouse = () => {
       )}
       {/* Add Variant Modal */}
       {showAddVariantModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-end" onClick={() => { setShowAddVariantModal(false); resetVariantForm(); }}>
-          <div className="bg-white rounded-t-3xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-end md:items-center md:justify-center md:p-6" onClick={() => { setShowAddVariantModal(false); resetVariantForm(); }}>
+          <div className="bg-white rounded-t-3xl md:rounded-3xl w-full md:max-w-4xl max-h-[90vh] md:max-h-[92vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="sticky top-0 bg-white border-b border-slate-100 px-5 py-4 flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-bold text-slate-900">Variant qo'shish</h2>
@@ -1348,8 +1348,8 @@ const Warehouse = () => {
 
       {/* Edit Variant Modal */}
       {showEditVariantModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-end" onClick={() => { setShowEditVariantModal(false); resetVariantForm(); }}>
-          <div className="bg-white rounded-t-3xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-end md:items-center md:justify-center md:p-6" onClick={() => { setShowEditVariantModal(false); resetVariantForm(); }}>
+          <div className="bg-white rounded-t-3xl md:rounded-3xl w-full md:max-w-4xl max-h-[90vh] md:max-h-[92vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="sticky top-0 bg-white border-b border-slate-100 px-5 py-4 flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-bold text-slate-900">Variant tahrirlash</h2>

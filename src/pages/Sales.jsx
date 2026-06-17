@@ -360,8 +360,12 @@ const Sales = () => {
 
   const handleProductClick = (product) => {
     if (product.has_variants && product.variants?.length > 0) {
-      setSelectedProductForVariants(product);
-      setShowVariantModal(true);
+      if (product.variants.length === 1) {
+        addToCart(product, product.variants[0]);
+      } else {
+        setSelectedProductForVariants(product);
+        setShowVariantModal(true);
+      }
     } else {
       addToCart(product, null);
     }
@@ -465,8 +469,8 @@ const Sales = () => {
   const customUzsAmount = parseFloat(customUzs) || 0;
   const customUsdAmount = parseFloat(customUsd) || 0;
   const customAmountValue = parseFloat(customAmount) || 0;
-  const hasCustomUzs = customUzs !== '' && customUzsAmount > 0 && paymentType !== 'debt';
-  const hasCustomUsd = customUsd !== '' && customUsdAmount > 0 && paymentType !== 'debt';
+  const hasCustomUzs = customUzs !== '' && customUzsAmount > 0;
+  const hasCustomUsd = customUsd !== '' && customUsdAmount > 0;
   const hasCustomAmount = customAmount !== '' && customAmountValue > 0 && paymentType !== 'debt';
 
   const handleCompleteSale = async () => {
@@ -489,7 +493,7 @@ const Sales = () => {
       items: cart.map(item => {
         const isUsdItem = item.price_usd > 0;
         const basePrice = isUsdItem ? item.price_usd : item.price_uzs;
-        const scale = paymentType === 'debt' ? 1 : (isUsdItem ? usdScale : uzsScale);
+        const scale = isUsdItem ? usdScale : uzsScale;
         return {
           product: item.productId,
           ...(item.variantId ? { variant: item.variantId } : {}),
@@ -505,14 +509,10 @@ const Sales = () => {
       setAllHistorySales([]);
       setSaleCart([...cart]);
       setLastCreatedSale(result);
-      setSaleAmounts(
-        paymentType === 'debt'
-          ? { uzs: 0, usd: 0 }
-          : {
-            uzs: customUzsAmount > 0 ? customUzsAmount : defaultUzs,
-            usd: customUsdAmount > 0 ? customUsdAmount : defaultUsd,
-          }
-      );
+      setSaleAmounts({
+        uzs: customUzsAmount > 0 ? customUzsAmount : (paymentType === 'debt' ? 0 : defaultUzs),
+        usd: customUsdAmount > 0 ? customUsdAmount : (paymentType === 'debt' ? 0 : defaultUsd),
+      });
       setShowDebtModal(false);
       setShowCompletion(true);
     } catch (error) { }
@@ -603,32 +603,53 @@ const Sales = () => {
               const priceUzs = isUzsProduct ? parseFloat(product.sale_price || 0) : 0;
               const priceUsd = !isUzsProduct ? parseFloat(product.sale_price || 0) : 0;
               const isHighPrice = priceUzs > 1000000 || priceUsd > 100;
+              const isOutOfStock = (product.total_quantity ?? product.quantity) <= 0;
+
+              const cartQty = product.has_variants
+                ? (product.variants || []).reduce((sum, v) => {
+                    const item = cart.find(c => c.cartId === `v-${v.id}`);
+                    return sum + (item ? parseInt(item.quantity, 10) || 0 : 0);
+                  }, 0)
+                : (() => { const item = cart.find(c => c.cartId === `p-${product.id}`); return item ? parseInt(item.quantity, 10) || 0 : 0; })();
+              const isInCart = cartQty > 0;
 
               return (
                 <div
                   key={product.id}
                   onClick={() => handleProductClick(product)}
-                  className={`${isHighPrice ? 'col-span-2' : ''} group cursor-pointer bg-white rounded-2xl p-3 border transition-all duration-200 ${(product.total_quantity ?? product.quantity) <= 0
-                    ? 'opacity-50 grayscale border-slate-100'
-                    : 'border-slate-100 hover:border-[#6366f1] hover:shadow-md active:scale-95'
-                    }`}
+                  className={`${isHighPrice ? 'col-span-2' : ''} group cursor-pointer rounded-2xl p-3 border transition-all duration-200 ${
+                    isOutOfStock
+                      ? 'opacity-50 grayscale border-slate-100 bg-white'
+                      : isInCart
+                        ? 'border-[#6366f1] bg-indigo-50/50 shadow-sm active:scale-95'
+                        : 'bg-white border-slate-100 hover:border-[#6366f1] hover:shadow-md active:scale-95'
+                  }`}
                 >
                   <div className="flex items-start justify-between mb-2">
-                    <div className="w-8 h-8 bg-slate-50 rounded-xl flex items-center justify-center">
-                      <Package className="w-4 h-4 text-[#6366f1]" />
-                    </div>
-                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-lg ${(product.total_quantity ?? product.quantity) <= 0 ? 'bg-red-50 text-red-500' : 'bg-emerald-50 text-emerald-600'
-                      }`}>
-                      {(product.total_quantity ?? product.quantity) <= 0 ? 'Yo\'q' : `${product.total_quantity ?? product.quantity} ${product.has_variants ? 'jami' : product.unit}`}
+                    {isInCart ? (
+                      <div className="w-8 h-8 bg-[#6366f1] rounded-xl flex items-center justify-center text-white font-black text-sm shrink-0">
+                        {cartQty}
+                      </div>
+                    ) : (
+                      <div className="w-8 h-8 bg-slate-50 rounded-xl flex items-center justify-center">
+                        <Package className="w-4 h-4 text-[#6366f1]" />
+                      </div>
+                    )}
+                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-lg ${isOutOfStock ? 'bg-red-50 text-red-500' : 'bg-emerald-50 text-emerald-600'}`}>
+                      {isOutOfStock ? 'Yo\'q' : `${product.total_quantity ?? product.quantity} ${product.has_variants ? 'jami' : product.unit}`}
                     </span>
                   </div>
                   <h4 className="font-semibold text-slate-800 text-xs mb-1.5 truncate leading-tight">{product.name}</h4>
                   <div className="flex items-center justify-between">
                     <div className="flex flex-col gap-0.5">
                       {product.has_variants ? (
-                        <p className="text-slate-500 font-bold text-[10px] leading-tight">
-                          {product.variant_count} ta variant
-                        </p>
+                        product.variants?.length === 1 ? (
+                          <p className="text-slate-500 font-bold text-[10px] leading-tight truncate">{product.variants[0].name}</p>
+                        ) : (
+                          <p className="text-slate-500 font-bold text-[10px] leading-tight">
+                            {product.variant_count} ta variant
+                          </p>
+                        )
                       ) : (
                         <>
                           {priceUzs > 0 && (
@@ -645,7 +666,7 @@ const Sales = () => {
                       )}
                     </div>
                     <div className="w-6 h-6 bg-slate-50 text-[#6366f1] rounded-lg flex items-center justify-center group-hover:bg-[#6366f1] group-hover:text-white transition-colors">
-                      {product.has_variants ? <CaretRight className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
+                      {product.has_variants && product.variants?.length !== 1 ? <CaretRight className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
                     </div>
                   </div>
                 </div>
@@ -789,10 +810,10 @@ const Sales = () => {
                 </div>
             </div>
 
-            {paymentType !== 'debt' && (
+            {(
               <div className="mb-4 space-y-3">
                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                  To'lov summasi
+                  {paymentType === 'debt' ? 'Nasiya summasi (ixtiyoriy)' : "To'lov summasi"}
                 </label>
                 {cartHasUzs && (
                   <div className="relative">
@@ -878,8 +899,8 @@ const Sales = () => {
       </div>
       {/* Debt modal */}
       {showDebtModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-end" onClick={() => setShowDebtModal(false)}>
-          <div className="bg-white rounded-t-3xl w-full" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-end md:items-center md:justify-center md:p-6" onClick={() => setShowDebtModal(false)}>
+          <div className="bg-white rounded-t-3xl md:rounded-3xl w-full md:max-w-4xl shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="px-5 pt-5 pb-2 flex items-center justify-between border-b border-slate-100">
               <h2 className="text-base font-bold text-slate-900">Nasiya ma'lumotlari</h2>
               <button onClick={() => setShowDebtModal(false)} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500">
@@ -920,10 +941,10 @@ const Sales = () => {
 
       {/* ── History Drawer ── */}
       {showHistoryDrawer && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-end" onClick={() => setShowHistoryDrawer(false)}>
-          <div className="bg-[#f8fafc] rounded-t-3xl w-full max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-end md:items-center md:justify-center md:p-6" onClick={() => setShowHistoryDrawer(false)}>
+          <div className="bg-[#f8fafc] rounded-t-3xl md:rounded-3xl w-full md:max-w-4xl max-h-[85vh] md:max-h-[90vh] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
             {/* Drawer header */}
-            <div className="bg-white px-5 py-4 flex items-center justify-between border-b border-slate-100 rounded-t-3xl shrink-0">
+            <div className="bg-white px-5 py-4 flex items-center justify-between border-b border-slate-100 rounded-t-3xl md:rounded-t-3xl shrink-0">
               <div>
                 <h2 className="text-base font-bold text-slate-900">Sotuvlar tarixi</h2>
                 {historyTotal > 0 && <p className="text-xs text-slate-400">{historyTotal} ta sotuv</p>}
@@ -992,8 +1013,8 @@ const Sales = () => {
 
       {/* ── Detail Modal ── */}
       {showDetailModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-end" onClick={() => setShowDetailModal(false)}>
-          <div className="bg-white rounded-t-3xl w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-end md:items-center md:justify-center md:p-6" onClick={() => setShowDetailModal(false)}>
+          <div className="bg-white rounded-t-3xl md:rounded-3xl w-full md:max-w-4xl max-h-[90vh] md:max-h-[90vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
             <div className="sticky top-0 bg-white border-b border-slate-100 px-5 py-4 flex items-center justify-between">
               <h2 className="text-base font-bold text-slate-900">Sotuv #{saleDetail?.id}</h2>
               <div className="flex items-center gap-2">
@@ -1121,8 +1142,8 @@ const Sales = () => {
 
       {/* ── Edit Sale Modal ── */}
       {showEditSaleModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] flex items-end" onClick={() => setShowEditSaleModal(false)}>
-          <div className="bg-white rounded-t-3xl w-full" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] flex items-end md:items-center md:justify-center md:p-6" onClick={() => setShowEditSaleModal(false)}>
+          <div className="bg-white rounded-t-3xl md:rounded-3xl w-full md:max-w-4xl shadow-2xl" onClick={e => e.stopPropagation()}>
             <div className="px-5 pt-5 pb-2 flex items-center justify-between border-b border-slate-100">
               <h2 className="text-base font-bold text-slate-900">Sotuvni tahrirlash</h2>
               <button onClick={() => setShowEditSaleModal(false)} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500">
@@ -1222,14 +1243,14 @@ const Sales = () => {
       {/* Variant Selection Modal */}
       <AnimatePresence>
         {showVariantModal && selectedProductForVariants && (
-          <motion.div 
+          <motion.div
             variants={backdropVariants} initial="hidden" animate="visible" exit="exit"
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-end" 
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-end md:items-center md:justify-center md:p-6"
             onClick={() => setShowVariantModal(false)}
           >
-            <motion.div 
+            <motion.div
               variants={modalVariants} initial="hidden" animate="visible" exit="exit"
-              className="bg-white rounded-t-3xl w-full max-h-[90vh] overflow-hidden flex flex-col origin-bottom" 
+              className="bg-white rounded-t-3xl md:rounded-3xl w-full md:max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
