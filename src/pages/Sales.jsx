@@ -979,7 +979,7 @@ const Sales = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <p className="text-xs font-semibold text-slate-900 truncate">{sale.customer_name}</p>
+                            <p className="text-xs font-semibold text-slate-900 truncate">{sale.customer_name || 'Noma\'lum Mijoz'}</p>
                             {sale.is_overdue && <span className="text-[9px] font-bold text-red-500 bg-red-50 px-1.5 py-0.5 rounded-lg shrink-0">Muddati o'tgan</span>}
                           </div>
                           <div className="flex items-center gap-2 mt-0.5">
@@ -1052,7 +1052,7 @@ const Sales = () => {
                 <div className="bg-slate-50 rounded-2xl p-4 space-y-2.5">
                   <div className="flex justify-between text-sm">
                     <span className="text-slate-400">Mijoz</span>
-                    <span className="font-semibold text-slate-900">{saleDetail.customer_name}</span>
+                    <span className="font-semibold text-slate-900">{saleDetail.customer_name || 'Noma\'lum Mijoz'}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-slate-400">Sana</span>
@@ -1374,7 +1374,7 @@ const Sales = () => {
               <div className="text-center mb-5">
                 <h3 className="text-base font-bold text-slate-900">BalonCRM Sotuv cheki</h3>
                 <p className="text-xs text-slate-400 mt-1">{formatDateTime(lastCreatedSale?.created_at)}</p>
-                <p className="text-xs text-slate-500 mt-0.5">Mijoz: {lastCreatedSale?.customer_name}</p>
+                <p className="text-xs text-slate-500 mt-0.5">Mijoz: {lastCreatedSale?.customer_name || 'Noma\'lum Mijoz'}</p>
               </div>
 
               <div className="mb-5 space-y-2">

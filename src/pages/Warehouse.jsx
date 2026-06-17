@@ -477,6 +477,7 @@ const Warehouse = () => {
   useEffect(() => { setPage(1); }, [searchTerm]);
 
   const { data: productsData, isLoading: productsLoading } = useProducts({ search: searchTerm, page, ordering: 'quantity' });
+  const { data: totalCountData } = useProducts({ page: 1 });
   const { data: categoriesData, isLoading: categoriesLoading } = useCategories();
   const { data: lowStockData } = useLowStockProducts();
   const { data: singleProduct, isLoading: productLoading } = useProduct(selectedProduct?.id);
@@ -516,7 +517,8 @@ const Warehouse = () => {
   const categories = categoriesData?.results || [];
   const totalProductPages = productsData?.count ? Math.ceil(productsData.count / 20) : 1;
 
-  const totalProductCount = productsData?.count ?? products.length;
+  const totalProductCount = totalCountData?.count ?? productsData?.count ?? products.length;
+  const searchResultCount = searchTerm ? (productsData?.count ?? products.length) : null;
   const lowStockRaw = lowStockData?.results || lowStockData || [];
   const lowStockCount = Array.isArray(lowStockRaw) ? lowStockRaw.length : 0;
 
@@ -769,6 +771,9 @@ const Warehouse = () => {
             <div className="bg-slate-50 rounded-2xl p-3 border border-slate-100">
               <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider mb-1">Jami mahsulotlar</p>
               <p className="text-xl font-black text-blue-700">{totalProductCount}</p>
+              {searchResultCount !== null && (
+                <p className="text-[10px] text-slate-400 mt-0.5">Qidiruvda: <span className="font-bold text-[#6366f1]">{searchResultCount} ta</span></p>
+              )}
             </div>
             <div className={`rounded-2xl p-3 border ${lowStockCount > 0 ? 'bg-red-50 border-red-100' : 'bg-emerald-50 border-emerald-100'}`}>
               <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${lowStockCount > 0 ? 'text-red-500' : 'text-emerald-500'}`}>Kam qolgan</p>
