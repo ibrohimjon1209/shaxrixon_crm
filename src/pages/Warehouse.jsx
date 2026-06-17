@@ -477,7 +477,6 @@ const Warehouse = () => {
   useEffect(() => { setPage(1); }, [searchTerm]);
 
   const { data: productsData, isLoading: productsLoading } = useProducts({ search: searchTerm, page, ordering: 'quantity' });
-  const { data: allPagesData } = useProducts({ ordering: 'quantity', page: 1 });
   const { data: categoriesData, isLoading: categoriesLoading } = useCategories();
   const { data: lowStockData } = useLowStockProducts();
   const { data: singleProduct, isLoading: productLoading } = useProduct(selectedProduct?.id);
@@ -521,28 +520,15 @@ const Warehouse = () => {
   const lowStockRaw = lowStockData?.results || lowStockData || [];
   const lowStockCount = Array.isArray(lowStockRaw) ? lowStockRaw.length : 0;
 
-  // Haqiqiy mahsulotlardan hisoblash (backend totallari noto'g'ri bo'lishi mumkin)
-  const allRealProducts = allPagesData?.results || [];
-  const realAgg = {};
-  allRealProducts.forEach((p) => {
-    const cid = p.category;
-    if (!cid) return;
-    if (!realAgg[cid]) realAgg[cid] = { saleUzs: 0, saleUsd: 0, costUzs: 0, costUsd: 0 };
-    const qty = parseInt(p.quantity) || 0;
-    const isUsd = (p.currency || 'uzs').toLowerCase() === 'usd';
-    realAgg[cid][isUsd ? 'saleUsd' : 'saleUzs'] += parseFloat(p.sale_price || 0) * qty;
-    realAgg[cid][isUsd ? 'costUsd' : 'costUzs'] += parseFloat(p.cost_price || 0) * qty;
-  });
-
   const categoryStats = categories.map((c) => ({
     id: c.id,
     name: c.name,
     count: c.product_count ?? 0,
     quantity: parseInt(c.total_quantity) || 0,
-    saleUzs: realAgg[c.id] ? realAgg[c.id].saleUzs : (parseFloat(c.total_sale_price_uzs) || 0),
-    saleUsd: realAgg[c.id] ? realAgg[c.id].saleUsd : (parseFloat(c.total_sale_price_usd) || 0),
-    costUzs: realAgg[c.id] ? realAgg[c.id].costUzs : (parseFloat(c.total_cost_price_uzs) || 0),
-    costUsd: realAgg[c.id] ? realAgg[c.id].costUsd : (parseFloat(c.total_cost_price_usd) || 0),
+    saleUzs: parseFloat(c.total_sale_price_uzs) || 0,
+    saleUsd: parseFloat(c.total_sale_price_usd) || 0,
+    costUzs: parseFloat(c.total_cost_price_uzs) || 0,
+    costUsd: parseFloat(c.total_cost_price_usd) || 0,
     lowStock: 0,
   })).sort((a, b) => a.quantity - b.quantity);
 
@@ -558,15 +544,10 @@ const Warehouse = () => {
     selectedCategory ? { category: selectedCategory.id, ordering: 'quantity' } : {}
   );
 
-  // Haqiqiy mahsulotlar ma'lumotidan hisoblash (backend totallari noto'g'ri bo'lishi mumkin)
-  const catProducts = catProductsData?.results || [];
-  const catSaleUzs = catProducts.reduce((s, p) => (p.currency || 'uzs').toLowerCase() === 'uzs' ? s + parseFloat(p.sale_price || 0) * (parseInt(p.quantity) || 0) : s, 0);
-  const catSaleUsd = catProducts.reduce((s, p) => (p.currency || 'uzs').toLowerCase() === 'usd' ? s + parseFloat(p.sale_price || 0) * (parseInt(p.quantity) || 0) : s, 0);
-  // cost_price list endpointida bo'lmasligi mumkin — backend kategoriya totallari to'g'ri
-  const computedCostUzs = catProducts.reduce((s, p) => (p.currency || 'uzs').toLowerCase() === 'uzs' ? s + parseFloat(p.cost_price || 0) * (parseInt(p.quantity) || 0) : s, 0);
-  const computedCostUsd = catProducts.reduce((s, p) => (p.currency || 'uzs').toLowerCase() === 'usd' ? s + parseFloat(p.cost_price || 0) * (parseInt(p.quantity) || 0) : s, 0);
-  const catCostUzs = computedCostUzs > 0 ? computedCostUzs : (selectedCategory?.costUzs || 0);
-  const catCostUsd = computedCostUsd > 0 ? computedCostUsd : (selectedCategory?.costUsd || 0);
+  const catSaleUzs = selectedCategory?.saleUzs || 0;
+  const catSaleUsd = selectedCategory?.saleUsd || 0;
+  const catCostUzs = selectedCategory?.costUzs || 0;
+  const catCostUsd = selectedCategory?.costUsd || 0;
 
   const getStatusCfg = (status) => statusConfig[status] || statusConfig.good;
 
@@ -1119,8 +1100,10 @@ const Warehouse = () => {
                   </div>
                 ) : (catProductsData?.results || []).map((p) => {
                   const sc = getStatusCfg(p.status);
-                  const isUsd = (p.currency || 'uzs').toLowerCase() === 'usd';
-                  const salePrice = parseFloat(p.sale_price || 0);
+                  const firstVariant = (p.variants || [])[0];
+                  const isUsd = firstVariant ? (firstVariant.currency || 'uzs').toLowerCase() === 'usd' : false;
+                  const salePrice = parseFloat(firstVariant?.sale_price || 0);
+                  const unit = firstVariant?.unit || 'dona';
                   return (
                     <button
                       key={p.id}
@@ -1130,13 +1113,16 @@ const Warehouse = () => {
                       <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${sc.dot}`} />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-slate-900 truncate">{p.name}</p>
-                        <p className={`text-xs font-bold ${isUsd ? 'text-emerald-600' : 'text-[#6366f1]'}`}>
-                          {isUsd ? `$${salePrice.toLocaleString()}` : `${salePrice.toLocaleString()} so'm`}
-                        </p>
+                        {salePrice > 0 && (
+                          <p className={`text-xs font-bold ${isUsd ? 'text-emerald-600' : 'text-[#6366f1]'}`}>
+                            {isUsd ? `$${salePrice.toLocaleString()}` : `${salePrice.toLocaleString()} so'm`}
+                            {(p.variants || []).length > 1 && <span className="text-slate-400 font-normal ml-1">dan</span>}
+                          </p>
+                        )}
                       </div>
                       <div className="text-center shrink-0 bg-slate-50 rounded-xl px-2.5 py-1">
-                        <p className="text-sm font-black text-slate-900 leading-tight">{p.quantity}</p>
-                        <p className="text-[9px] text-slate-400">{p.unit || 'dona'}</p>
+                        <p className="text-sm font-black text-slate-900 leading-tight">{(p.total_quantity ?? 0).toLocaleString()}</p>
+                        <p className="text-[9px] text-slate-400">{unit}</p>
                       </div>
                       <PencilSimple className="w-4 h-4 text-slate-300 shrink-0" />
                     </button>
