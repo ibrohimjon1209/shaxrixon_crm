@@ -11,6 +11,7 @@ import Warehouse from './pages/Warehouse';
 import Sales from './pages/Sales';
 import Reports from './pages/Reports';
 import Purchases from './pages/Purchases';
+import Profile from './pages/Profile';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -83,6 +84,11 @@ const AppContent = () => {
           <Route path="/purchases" element={
             <ProtectedRoute>
               <Purchases />
+            </ProtectedRoute>
+          } />
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <Profile />
             </ProtectedRoute>
           } />
           <Route path="/more" element={

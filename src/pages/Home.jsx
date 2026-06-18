@@ -133,14 +133,21 @@ const Home = () => {
 
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-between items-center mb-6 relative z-10">
-            <div className="min-w-0 pr-4">
-              <p className="text-slate-200 text-sm md:text-base font-medium leading-tight">
-                Xush kelibsiz,
-              </p>
-              <h1 className="text-white text-xl md:text-2xl font-bold leading-tight truncate mt-0.5">
-                {currentUser?.full_name || 'Foydalanuvchi'}!
-              </h1>
-              <p className="text-slate-300 text-xs mt-1.5 capitalize">{today}</p>
+            <div className="flex items-center gap-3">
+              <Link to="/profile" className="md:hidden w-11 h-11 rounded-full bg-white border-[3px] border-white/30 flex items-center justify-center text-white shrink-0 shadow-sm overflow-hidden active:scale-95 transition-transform">
+                 <img src="/shaxrixon_balon_logo.png" alt="Logo" className="w-full h-full object-cover" />
+              </Link>
+              <div className="min-w-0">
+                <p className="text-slate-200 text-[11px] md:text-sm font-medium leading-tight">
+                  Xush kelibsiz,
+                </p>
+                <Link to="/profile" className="md:pointer-events-none inline-block">
+                  <h1 className="text-white text-lg md:text-2xl font-bold leading-tight truncate mt-px md:mt-0.5">
+                    {currentUser?.full_name || 'Foydalanuvchi'}!
+                  </h1>
+                </Link>
+                <p className="hidden md:block text-slate-300 text-xs mt-1.5 capitalize">{today}</p>
+              </div>
             </div>
             <button
               onClick={() => navigate('/notification')}

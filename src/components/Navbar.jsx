@@ -1,8 +1,9 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
-  House, ShoppingCart, Package, Users, ChartBar, Truck
+  House, ShoppingCart, Package, Users, ChartBar, Truck, UserCircle, SignOut
 } from '@phosphor-icons/react';
+import { useAuth } from '../context/AuthContext';
 
 const navItems = [
   { path: '/', icon: House, label: 'Asosiy' },
@@ -15,6 +16,15 @@ const navItems = [
 
 const Navbar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (err) {}
+  };
 
   return (
     <>
@@ -52,9 +62,21 @@ const Navbar = () => {
           })}
         </nav>
 
-        {/* Footer */}
-        <div className="px-5 py-4 border-t border-slate-50">
-          <p className="text-[10px] text-slate-500 font-medium">v1.0.0 · NSD Corporation</p>
+        {/* User Profile & Logout */}
+        <div className="p-4 border-t border-slate-50">
+          <Link to="/profile" className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-colors mb-2">
+            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shrink-0 overflow-hidden border-2 border-indigo-50 shadow-sm">
+              <img src="/shaxrixon_balon_logo.png" className="w-full h-full object-cover" alt="Logo" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-slate-800 truncate">{user?.full_name || 'Foydalanuvchi'}</p>
+              <p className="text-[10px] text-slate-400 uppercase font-semibold">{user?.is_staff ? 'Admin' : 'Xodim'}</p>
+            </div>
+          </Link>
+          <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-red-500 hover:bg-red-50 text-sm font-bold transition-colors shadow-sm">
+            <SignOut className="w-5 h-5" />
+            Chiqish
+          </button>
         </div>
       </aside>
 
