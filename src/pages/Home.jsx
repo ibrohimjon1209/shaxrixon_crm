@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Bell, ShoppingCart, Users, Package, ChartBar,
-  Spinner, TrendUp, WarningCircle, CreditCard, Truck, CurrencyDollar
+  Spinner, TrendUp, WarningCircle, CreditCard, CurrencyDollar
 } from '@phosphor-icons/react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { useDashboardStats } from '../hooks/useReports';
@@ -29,12 +29,8 @@ const Home = () => {
 
   const revUZS  = parseFloat(stats?.revenue_uzs ?? 0);
   const revUSD  = parseFloat(stats?.revenue_usd ?? 0);
-  const costUZS = parseFloat(stats?.cost_uzs ?? 0);
-  const costUSD = parseFloat(stats?.cost_usd ?? 0);
   const profUZS = parseFloat(stats?.profit_uzs ?? stats?.gross_profit_uzs ?? 0);
   const profUSD = parseFloat(stats?.profit_usd ?? stats?.gross_profit_usd ?? 0);
-  const purchaseUZS = parseFloat(stats?.purchase_total_uzs ?? stats?.purchase_total ?? 0);
-  const purchaseUSD = parseFloat(stats?.purchase_total_usd ?? 0);
   const debtUZS = parseFloat(stats?.debt_uzs ?? 0);
   const debtUSD = parseFloat(stats?.debt_usd ?? 0);
   const salesCount = stats?.sales_count ?? 0;
@@ -57,6 +53,7 @@ const Home = () => {
   }
 
   const span = (formatted) => formatted.length > 9 ? 'col-span-2 md:col-span-1' : 'col-span-1';
+
   const statCards = [
     {
       label: 'Tushum',
@@ -72,22 +69,6 @@ const Home = () => {
       path: '/reports',
       value: `$${fmt(profUSD)}`,
       sub: `${fmt(profUZS)} so'm`,
-      className: 'col-span-2 md:col-span-1',
-    },
-    {
-      label: 'Xarajat',
-      icon: CreditCard,
-      path: '/reports',
-      value: `$${fmt(costUSD)}`,
-      sub: `${fmt(costUZS)} so'm`,
-      className: 'col-span-2 md:col-span-1',
-    },
-    {
-      label: 'Xarid jami',
-      icon: Truck,
-      path: '/reports',
-      value: `$${fmt(purchaseUSD)}`,
-      sub: `${fmt(purchaseUZS)} so'm | ${purchasesCount} ta`,
       className: 'col-span-2 md:col-span-1',
     },
     {
@@ -125,7 +106,7 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-[#f8fafc] pb-28 md:pb-8 font-sans">
-      {/* ── Header ── */}
+      {/* Header */}
       <div className="bg-gradient-to-br from-[#6366f1] to-[#4338ca] px-5 md:px-8 pt-10 pb-16 md:pb-10 relative overflow-hidden">
         <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full" />
         <div className="absolute top-16 -right-6 w-24 h-24 bg-white/5 rounded-full" />
@@ -161,7 +142,6 @@ const Home = () => {
             </button>
           </div>
 
-          {/* Stats grid — each card spans full width only if its number is long */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 relative z-10">
             {statCards.map(({ label, path, onClick, value, sub, className, icon: Icon }) => {
               const content = (
@@ -176,9 +156,7 @@ const Home = () => {
               );
 
               return path ? (
-                <Link key={label} to={path} className={className}>
-                  {content}
-                </Link>
+                <Link key={label} to={path} className={className}>{content}</Link>
               ) : (
                 <button key={label} onClick={onClick} className={`${className} cursor-pointer text-left hover:bg-white/10 transition-colors rounded-2xl`}>
                   {content}
@@ -189,16 +167,12 @@ const Home = () => {
         </div>
       </div>
 
-      {/* ── Content ── */}
+      {/* Content */}
       <div className="px-4 md:px-8 -mt-6 relative z-10 max-w-6xl mx-auto">
-
-        {/* Main card on mobile / two-column on desktop */}
         <div className="md:grid md:grid-cols-3 md:gap-6 md:items-start">
 
           {/* Left col — quick actions + chart */}
           <div className="md:col-span-2 bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden mb-4 md:mb-0">
-
-            {/* Quick actions */}
             <div className="p-5 border-b border-slate-50">
               <h2 className="text-sm font-bold text-slate-700 mb-4">Tezkor amallar</h2>
               <div className="grid grid-cols-4 gap-3">
@@ -220,7 +194,6 @@ const Home = () => {
               </div>
             </div>
 
-            {/* Chart */}
             {chartData.length > 1 && (
               <div className="p-5">
                 <div className="flex items-center justify-between mb-3">
@@ -243,44 +216,40 @@ const Home = () => {
 
           {/* Right col — recent sales + low stock */}
           <div className="space-y-4">
-
-            {/* Recent sales */}
             {!salesLoading && recentSales.length > 0 && (
               <Link to='/customers'>
-              <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
-                <h2 className="text-sm font-bold text-slate-700 mb-3">So'nggi sotuvlar</h2>
-                <div className="space-y-2">
-                  {recentSales.map((sale) => {
-                    const cName = sale.customer_name || "Noma'lum Xaridor";
-                    const initial = cName.charAt(0).toUpperCase();
-                    const usd = parseFloat(sale.total_usd || 0);
-                    const uzs = parseFloat(sale.total_uzs || 0);
-
-                    return (
-                      <div key={sale.id} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
-                        <div className="flex items-center gap-3 min-w-0 pr-3">
-                          <div className="w-8 h-8 bg-slate-50 rounded-full flex items-center justify-center font-bold text-[#6366f1] text-xs shrink-0">
-                            {initial}
+                <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-5">
+                  <h2 className="text-sm font-bold text-slate-700 mb-3">So'nggi sotuvlar</h2>
+                  <div className="space-y-2">
+                    {recentSales.map((sale) => {
+                      const cName = sale.customer_name || "Noma'lum Xaridor";
+                      const initial = cName.charAt(0).toUpperCase();
+                      const usd = parseFloat(sale.total_usd || 0);
+                      const uzs = parseFloat(sale.total_uzs || 0);
+                      return (
+                        <div key={sale.id} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
+                          <div className="flex items-center gap-3 min-w-0 pr-3">
+                            <div className="w-8 h-8 bg-slate-50 rounded-full flex items-center justify-center font-bold text-[#6366f1] text-xs shrink-0">
+                              {initial}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-xs font-semibold text-slate-800 leading-tight truncate">{cName}</p>
+                              <p className="text-[10px] text-slate-400">{new Date(sale.created_at).toLocaleDateString()}</p>
+                            </div>
                           </div>
-                          <div className="min-w-0">
-                            <p className="text-xs font-semibold text-slate-800 leading-tight truncate">{cName}</p>
-                            <p className="text-[10px] text-slate-400">{new Date(sale.created_at).toLocaleDateString()}</p>
+                          <div className="text-right shrink-0 flex flex-col gap-0.5">
+                            {usd !== 0 && <p className="text-xs font-black text-emerald-600 leading-none">${usd.toLocaleString()}</p>}
+                            {uzs !== 0 && <p className="text-[11px] font-bold text-[#6366f1] leading-none">{uzs.toLocaleString()} so'm</p>}
+                            {usd === 0 && uzs === 0 && <p className="text-xs font-bold text-slate-400 leading-none">—</p>}
                           </div>
                         </div>
-                        <div className="text-right shrink-0 flex flex-col gap-0.5">
-                          {usd !== 0 && <p className="text-xs font-black text-emerald-600 leading-none">${usd.toLocaleString()}</p>}
-                          {uzs !== 0 && <p className="text-[11px] font-bold text-[#6366f1] leading-none">{uzs.toLocaleString()} so'm</p>}
-                          {usd === 0 && uzs === 0 && <p className="text-xs font-bold text-slate-400 leading-none">—</p>}
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
               </Link>
             )}
 
-            {/* Low stock */}
             {lowStockProducts.length > 0 && (
               <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-5 mt-4">
                 <div className="flex items-center justify-between mb-4">
@@ -319,7 +288,6 @@ const Home = () => {
                 </div>
               </div>
             )}
-
           </div>
         </div>
       </div>

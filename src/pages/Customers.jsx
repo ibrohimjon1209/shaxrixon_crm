@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import {
   Plus, MagnifyingGlass, Phone, Pencil,
-  Trash, ChatCircle, FileText, X, CheckCircle,
+  Trash, ChatCircle, FileText, X, CheckCircle, Check,
   MapPin, Calendar, CreditCard, Spinner, Users,
   CaretDown, CaretUp
 } from '@phosphor-icons/react';
@@ -466,6 +466,11 @@ export const AddEditCustomerModal = ({ initialData, onClose, onSave, isPending }
     note: initialData?.note || '',
   });
 
+  const [showAddress, setShowAddress] = useState(false);
+  const [showNote, setShowNote] = useState(false);
+  const addressOpen = showAddress || !!(formData.address);
+  const noteOpen = showNote || !!(formData.note);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (formData.name && formData.phone && formData.phone !== '+998') {
@@ -526,15 +531,35 @@ export const AddEditCustomerModal = ({ initialData, onClose, onSave, isPending }
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-slate-500 block mb-1.5">Manzil</label>
-            <input
-              name="address"
-              value={formData.address}
-              onChange={e => setFormData({ ...formData, address: e.target.value })}
-              type="text"
-              className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3.5 px-4 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1]"
-              placeholder="Toshkent shahri"
-            />
+            <button
+              type="button"
+              onClick={() => {
+                if (addressOpen) {
+                  setFormData({ ...formData, address: '' });
+                  setShowAddress(false);
+                } else {
+                  setShowAddress(true);
+                }
+              }}
+              className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 transition-colors"
+            >
+              <span className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all shrink-0 ${addressOpen ? 'bg-[#6366f1] border-[#6366f1]' : 'border-slate-300 bg-white'}`}>
+                {addressOpen && <Check className="w-3 h-3 text-white" weight="bold" />}
+              </span>
+              <span className="font-medium">Manzil</span>
+              <span className="text-slate-400 text-xs">(ixtiyoriy)</span>
+            </button>
+            {addressOpen && (
+              <input
+                autoFocus
+                name="address"
+                value={formData.address}
+                onChange={e => setFormData({ ...formData, address: e.target.value })}
+                type="text"
+                className="mt-2 w-full bg-slate-50 border border-slate-200 rounded-2xl py-3.5 px-4 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1]"
+                placeholder="Toshkent shahri, Yunusobod..."
+              />
+            )}
           </div>
           {initialData && (
             <div className="grid grid-cols-2 gap-3">
@@ -563,14 +588,34 @@ export const AddEditCustomerModal = ({ initialData, onClose, onSave, isPending }
             </div>
           )}
           <div>
-            <label className="text-xs font-semibold text-slate-500 block mb-1.5">Eslatma (Note)</label>
-            <textarea
-              name="note"
-              value={formData.note}
-              onChange={e => setFormData({ ...formData, note: e.target.value })}
-              className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3.5 px-4 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1] min-h-[80px]"
-              placeholder="Mijoz haqida eslatma..."
-            />
+            <button
+              type="button"
+              onClick={() => {
+                if (noteOpen) {
+                  setFormData({ ...formData, note: '' });
+                  setShowNote(false);
+                } else {
+                  setShowNote(true);
+                }
+              }}
+              className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 transition-colors"
+            >
+              <span className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all shrink-0 ${noteOpen ? 'bg-[#6366f1] border-[#6366f1]' : 'border-slate-300 bg-white'}`}>
+                {noteOpen && <Check className="w-3 h-3 text-white" weight="bold" />}
+              </span>
+              <span className="font-medium">Eslatma</span>
+              <span className="text-slate-400 text-xs">(ixtiyoriy)</span>
+            </button>
+            {noteOpen && (
+              <textarea
+                autoFocus
+                name="note"
+                value={formData.note}
+                onChange={e => setFormData({ ...formData, note: e.target.value })}
+                className="mt-2 w-full bg-slate-50 border border-slate-200 rounded-2xl py-3.5 px-4 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1] min-h-[80px] resize-none"
+                placeholder="Mijoz haqida eslatma..."
+              />
+            )}
           </div>
           <button
             type="submit"

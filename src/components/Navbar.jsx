@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
-  House, ShoppingCart, Package, Users, ChartBar, Truck, UserCircle, SignOut
+  House, ShoppingCart, Package, Users, Truck, SignOut
 } from '@phosphor-icons/react';
 import { useAuth } from '../context/AuthContext';
 
@@ -11,7 +11,6 @@ const navItems = [
   { path: '/warehouse', icon: Package, label: 'Ombor' },
   { path: '/purchases', icon: Truck, label: 'Xarid' },
   { path: '/customers', icon: Users, label: 'Mijozlar' },
-  { path: '/reports', icon: ChartBar, label: 'Hisobot' },
 ];
 
 const Navbar = () => {
@@ -82,11 +81,11 @@ const Navbar = () => {
 
       {/* ── Mobile bottom bar ───────────────────────────────── */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
-        <div className="mx-3 mb-3">
+        <div className="mx-2 mb-3">
           <div className="relative">
-            <div className="absolute inset-0 bg-white/85 backdrop-blur-xl border border-white/30 rounded-3xl shadow-2xl shadow-black/10" />
+            <div className="absolute inset-0 bg-white/90 backdrop-blur-xl border border-white/30 rounded-3xl shadow-2xl shadow-black/10" />
             <div className="absolute inset-0 bg-gradient-to-br from-slate-50/40 to-white/60 rounded-3xl" />
-            <div className="relative flex justify-around items-center h-[68px] px-1">
+            <div className="relative flex justify-around items-center h-[76px] px-1">
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.path;
@@ -94,13 +93,14 @@ const Navbar = () => {
                   <Link
                     key={item.path}
                     to={item.path}
-                    className="relative flex flex-col items-center justify-center gap-0.5 transition-all duration-300 ease-out min-w-[48px]"
+                    className="relative flex flex-col items-center justify-center gap-1 transition-all duration-300 ease-out flex-1 py-2"
                   >
-                    <div className={`relative flex items-center justify-center rounded-xl transition-all duration-300 ease-out ${isActive ? 'bg-slate-50 p-2 text-[#6366f1]' : 'p-1.5 text-slate-400 hover:text-slate-600'
-                      }`}>
-                      <Icon className={`transition-all duration-300 ${isActive ? 'w-5 h-5' : 'w-4 h-4'}`} strokeWidth={isActive ? 2.5 : 2} />
+                    <div className={`relative flex items-center justify-center rounded-2xl transition-all duration-300 ease-out ${
+                      isActive ? 'bg-[#6366f1]/10 p-2.5 text-[#6366f1]' : 'p-2.5 text-slate-400 hover:text-slate-600'
+                    }`}>
+                      <Icon className={`transition-all duration-300 ${isActive ? 'w-6 h-6' : 'w-6 h-6'}`} weight={isActive ? 'fill' : 'regular'} />
                     </div>
-                    <span className={`font-medium transition-all duration-300 leading-none text-[9px] ${isActive ? 'text-[#6366f1]' : 'text-slate-400'}`}>
+                    <span className={`font-semibold transition-all duration-300 leading-none text-[10px] ${isActive ? 'text-[#6366f1]' : 'text-slate-400'}`}>
                       {item.label}
                     </span>
                   </Link>

@@ -355,11 +355,10 @@ const Purchases = () => {
 
                 {/* Cart */}
                 {cart.length > 0 && (
-                  <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                    <div className="flex items-center justify-between px-4 pt-4 pb-2">
-                      <h3 className="text-sm font-bold text-slate-900">Tanlangan mahsulotlar</h3>
-                      <span className="bg-slate-50 text-[#6366f1] px-2.5 py-1 rounded-xl text-xs font-bold">{cart.length} ta</span>
-                    </div>
+                  <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden relative">
+                    <span className="absolute top-3 right-3 text-[10px] font-bold text-[#6366f1] bg-slate-50 px-2 py-0.5 rounded-full border border-slate-100 z-10">
+                      {cart.length} ta
+                    </span>
                     <div className="divide-y divide-slate-50">
                       {cart.map(item => {
                         const isUsd = item.currency === 'usd';
@@ -368,44 +367,34 @@ const Purchases = () => {
                           ? `$${fmt(item.costPrice * item.quantity)}`
                           : `${fmt(item.costPrice * item.quantity)} so'm`;
                         return (
-                          <div key={item.cartId} className="px-4 py-3">
-                            <div className="flex items-center justify-between mb-2.5">
+                          <div key={item.cartId} className="px-4 pt-3 pb-2.5">
+                            <div className="flex items-start justify-between mb-1.5 pr-10">
                               <div className="flex-1 min-w-0 pr-2">
-                                <h4 className="font-bold text-slate-900 text-sm truncate">{item.productName || item.name}</h4>
-                                {item.variantName && (
-                                  <p className="text-[10px] text-slate-500 font-medium truncate mb-0.5">{item.variantName}</p>
-                                )}
-                                <p className="text-xs text-slate-400">{priceLabel} × {item.quantity}</p>
+                                <h4 className="font-bold text-slate-900 text-sm truncate leading-tight">{item.productName || item.name}</h4>
+                                <p className="text-[11px] text-slate-400 mt-0.5">
+                                  {item.variantName && <span className="mr-1">{item.variantName} ·</span>}
+                                  {priceLabel} × {item.quantity}
+                                </p>
                               </div>
                               <p className={`text-sm font-black shrink-0 ${isUsd ? 'text-emerald-600' : 'text-[#6366f1]'}`}>{totalLabel}</p>
                             </div>
                             <div className="flex items-center gap-2">
                               <button
                                 onClick={() => setCart(cart.map(c => c.cartId === item.cartId ? { ...c, quantity: Math.max(1, (parseInt(c.quantity, 10) || 1) - 1) } : c))}
-                                className="w-11 h-11 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 active:scale-90 transition-all"
+                                className="w-12 h-12 rounded-xl bg-slate-200 flex items-center justify-center text-slate-700 hover:bg-slate-300 active:scale-90 transition-all shrink-0"
                               >
                                 <Minus className="w-5 h-5" />
                               </button>
-                              <input
-                                type="number"
-                                min="1"
-                                value={item.quantity}
-                                onChange={(e) => setCart(cart.map(c => c.cartId === item.cartId ? { ...c, quantity: e.target.value } : c))}
-                                onBlur={(e) => {
-                                  const val = parseInt(e.target.value, 10) || 1;
-                                  setCart(cart.map(c => c.cartId === item.cartId ? { ...c, quantity: val } : c));
-                                }}
-                                className="flex-1 h-11 text-center font-black text-slate-900 text-lg bg-slate-50 rounded-2xl outline-none border border-slate-100 focus:border-[#6366f1]"
-                              />
+                              <span className="w-8 text-center font-black text-slate-900 text-base select-none">{item.quantity}</span>
                               <button
                                 onClick={() => setCart(cart.map(c => c.cartId === item.cartId ? { ...c, quantity: (parseInt(c.quantity, 10) || 1) + 1 } : c))}
-                                className="w-11 h-11 rounded-2xl bg-[#6366f1] flex items-center justify-center text-white hover:bg-blue-700 active:scale-90 transition-all"
+                                className="w-12 h-12 rounded-xl bg-[#6366f1] flex items-center justify-center text-white hover:bg-blue-700 active:scale-90 transition-all shrink-0"
                               >
                                 <Plus className="w-5 h-5" />
                               </button>
                               <button
                                 onClick={() => removeFromCart(item.cartId)}
-                                className="w-11 h-11 rounded-2xl bg-red-500 flex items-center justify-center text-white hover:bg-red-600 active:scale-90 transition-all"
+                                className="w-12 h-12 rounded-xl bg-red-500 flex items-center justify-center text-white hover:bg-red-600 active:scale-90 transition-all shrink-0 ml-auto"
                               >
                                 <X className="w-5 h-5" />
                               </button>
@@ -419,12 +408,11 @@ const Purchases = () => {
 
                 {/* Note */}
                 <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Izoh (ixtiyoriy)</label>
                   <textarea
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
-                    placeholder="Xarid haqida izoh..."
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 text-xs focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1] outline-none min-h-[70px] resize-none"
+                    placeholder="Izoh (ixtiyoriy)..."
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1] outline-none min-h-[70px] resize-none"
                   />
                 </div>
               </div>

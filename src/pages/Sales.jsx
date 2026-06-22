@@ -87,7 +87,7 @@ const SearchableCustomerSelect = ({ customers, selectedCustomer, onSelect }) => 
           <input
             ref={inputRef}
             type="text"
-            placeholder="Ism yoki telefon raqam..."
+            placeholder="Mijoz tanlash (ixtiyoriy)..."
             value={query}
             onChange={(e) => { setQuery(e.target.value); setIsOpen(true); }}
             onFocus={() => setIsOpen(true)}
@@ -702,10 +702,10 @@ const Sales = () => {
 
         {/* Cart */}
         {cart.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-            <div className="flex items-center justify-between px-4 pt-4 pb-2">
-              <p className="text-xs font-semibold text-slate-400">Savatcha <span className="text-[#6366f1]">{cart.length} ta</span></p>
-            </div>
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden relative">
+            <span className="absolute top-3 right-3 text-[10px] font-bold text-[#6366f1] bg-slate-50 px-2 py-0.5 rounded-full border border-slate-100 z-10">
+              {cart.length} ta
+            </span>
             <div className="divide-y divide-slate-50">
               {cart.map((item) => {
                 const isUsd = item.currency === 'USD';
@@ -714,46 +714,38 @@ const Sales = () => {
                   ? `$${(item.price * item.quantity).toLocaleString()}`
                   : `${(item.price * item.quantity).toLocaleString()} so'm`;
                 return (
-                  <div key={item.id} className="px-4 py-3">
+                  <div key={item.id} className="px-4 pt-3 pb-2.5">
                     {/* Top row: name + total */}
-                    <div className="flex items-center justify-between mb-2.5">
+                    <div className="flex items-start justify-between mb-1.5 pr-10">
                       <div className="flex-1 min-w-0 pr-2">
-                        <h4 className="font-bold text-slate-900 text-sm truncate">{item.productName || item.name}</h4>
-                        {item.variantName && (
-                          <p className="text-[10px] text-slate-500 font-medium truncate mb-0.5">{item.variantName}</p>
-                        )}
-                        <p className="text-xs text-slate-400">{priceLabel} × {item.quantity}</p>
+                        <h4 className="font-bold text-slate-900 text-sm truncate leading-tight">{item.productName || item.name}</h4>
+                        <p className="text-[11px] text-slate-400 mt-0.5">
+                          {item.variantName && <span className="mr-1">{item.variantName} ·</span>}
+                          {priceLabel} × {item.quantity}
+                        </p>
                       </div>
                       <p className={`text-sm font-black shrink-0 ${isUsd ? 'text-emerald-600' : 'text-[#6366f1]'}`}>{totalLabel}</p>
                     </div>
-                    {/* Bottom row: - input + X */}
+                    {/* Compact stepper */}
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => updateQuantity(item.id, -1)}
-                        className="w-11 h-11 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 active:scale-90 transition-all"
+                        className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 active:scale-90 transition-all shrink-0"
                       >
-                        <Minus className="w-5 h-5" />
+                        <Minus className="w-4 h-4" />
                       </button>
-                      <input
-                        type="number"
-                        min="1"
-                        max={item.maxQuantity}
-                        value={item.quantity}
-                        onChange={(e) => setQuantity(item.id, e.target.value)}
-                        onBlur={() => commitQuantity(item.id)}
-                        className="flex-1 h-11 text-center font-black text-slate-900 text-lg bg-slate-50 rounded-2xl outline-none border border-slate-100 focus:border-[#6366f1]"
-                      />
+                      <span className="w-8 text-center font-black text-slate-900 text-base select-none">{item.quantity}</span>
                       <button
                         onClick={() => updateQuantity(item.id, 1)}
-                        className="w-11 h-11 rounded-2xl bg-[#6366f1] flex items-center justify-center text-white hover:bg-blue-700 active:scale-90 transition-all"
+                        className="w-10 h-10 rounded-xl bg-[#6366f1] flex items-center justify-center text-white hover:bg-blue-700 active:scale-90 transition-all shrink-0"
                       >
-                        <Plus className="w-5 h-5" />
+                        <Plus className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => removeFromCart(item.id)}
-                        className="w-11 h-11 rounded-2xl bg-red-500 flex items-center justify-center text-white hover:bg-red-600 active:scale-90 transition-all"
+                        className="w-10 h-10 rounded-xl bg-red-500 flex items-center justify-center text-white hover:bg-red-600 active:scale-90 transition-all shrink-0 ml-auto"
                       >
-                        <X className="w-5 h-5" />
+                        <X className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
@@ -792,9 +784,6 @@ const Sales = () => {
 
             {/* Mijoz — barcha to'lov turlarida (nasiyada majburiy) */}
             <div className="mb-4">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">
-                Mijoz {paymentType === 'debt' ? <span className="text-red-400">*</span> : <span className="text-slate-300">(ixtiyoriy)</span>}
-              </label>
                 <div className="flex gap-2">
                   <SearchableCustomerSelect
                     customers={customers}
@@ -827,7 +816,7 @@ const Sales = () => {
                     />
                     {getTotalUzs() > 0 && (
                       <button type="button" onClick={() => setCustomUzs(getTotalUzs().toString())}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 rounded-lg text-[10px] font-bold bg-[#6366f1]/10 text-[#6366f1] hover:opacity-80">
+                        className="absolute right-2 top-1/2 -translate-y-1/2 px-2.5 py-1.5 rounded-lg text-[10px] font-bold bg-[#6366f1] text-white hover:bg-blue-700 active:scale-95 transition-all shadow-sm">
                         to'liq
                       </button>
                     )}
@@ -845,7 +834,7 @@ const Sales = () => {
                     />
                     {getTotalUsd() > 0 && (
                       <button type="button" onClick={() => setCustomUsd(getTotalUsd().toString())}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 rounded-lg text-[10px] font-bold bg-emerald-50 text-emerald-600 hover:opacity-80">
+                        className="absolute right-2 top-1/2 -translate-y-1/2 px-2.5 py-1.5 rounded-lg text-[10px] font-bold bg-emerald-600 text-white hover:bg-emerald-700 active:scale-95 transition-all shadow-sm">
                         to'liq
                       </button>
                     )}

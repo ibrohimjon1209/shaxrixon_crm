@@ -139,11 +139,57 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, submitLabel,
   const variantsEndRef = useRef(null);
   const [variantToDelete, setVariantToDelete] = useState(null);
   const [isDeletingVariant, setIsDeletingVariant] = useState(false);
+  const [showDescription, setShowDescription] = useState(false);
+  const descriptionOpen = showDescription || !!(formData.description);
+
+  const [showBasePrice, setShowBasePrice] = useState(false);
+  const [basePrice, setBasePrice] = useState(() => {
+    const vs = formData.variants || [];
+    const first = vs[0];
+    if (
+      vs.length > 1 && first &&
+      vs.every(v =>
+        (v.currency || 'usd') === (first.currency || 'usd') &&
+        String(v.cost_price || '') === String(first.cost_price || '') &&
+        String(v.sale_price || '') === String(first.sale_price || '')
+      ) && (first.cost_price || first.sale_price)
+    ) {
+      return {
+        currency: first.currency || 'usd',
+        cost_price: String(first.cost_price || ''),
+        sale_price: String(first.sale_price || ''),
+      };
+    }
+    return { currency: 'usd', cost_price: '', sale_price: '' };
+  });
+  const basePriceOpen = showBasePrice || !!(basePrice.cost_price || basePrice.sale_price);
+  const bpIsUzs = basePrice.currency === 'uzs';
+
+  const updateBasePrice = (newBp) => {
+    setBasePrice(newBp);
+    setFormData(prev => ({
+      ...prev,
+      variants: (prev.variants || []).map(v => ({
+        ...v,
+        currency: newBp.currency,
+        cost_price: newBp.cost_price,
+        sale_price: newBp.sale_price,
+      }))
+    }));
+  };
 
   const handleAddVariant = () => {
     setFormData({
       ...formData,
-      variants: [...(formData.variants || []), { name: '', quantity: '', sale_price: '', cost_price: '', currency: 'uzs', unit: 'dona', is_active: true }]
+      variants: [...(formData.variants || []), {
+        name: '',
+        quantity: '',
+        sale_price: basePrice.sale_price || '',
+        cost_price: basePrice.cost_price || '',
+        currency: basePrice.currency || 'usd',
+        unit: 'dona',
+        is_active: true
+      }]
     });
     setTimeout(() => {
       variantsEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -194,117 +240,199 @@ const ProductForm = ({ formData, setFormData, categories, onSubmit, submitLabel,
       </div>
 
       <div>
-        <label className="block text-xs font-semibold text-slate-500 mb-1.5">Tavsif <span className="text-slate-400 font-normal">(ixtiyoriy)</span></label>
-        <textarea
-          value={formData.description || ''}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          rows={3}
-          className={inputClass + ' resize-none'}
-          placeholder="Mahsulot haqida qo'shimcha ma'lumot..."
-        />
+        <button
+          type="button"
+          onClick={() => setShowDescription(!descriptionOpen)}
+          className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-600 transition-colors"
+        >
+          <span className={`w-4 h-4 rounded border flex items-center justify-center transition-all shrink-0 ${descriptionOpen ? 'bg-[#6366f1] border-[#6366f1]' : 'border-slate-300 bg-white'}`}>
+            {descriptionOpen && <Check className="w-2.5 h-2.5 text-white" />}
+          </span>
+          Tavsif <span className="text-slate-300">(ixtiyoriy)</span>
+        </button>
+        {descriptionOpen && (
+          <textarea
+            value={formData.description || ''}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            rows={3}
+            className={inputClass + ' resize-none mt-2'}
+            placeholder="Mahsulot haqida qo'shimcha ma'lumot..."
+            autoFocus
+          />
+        )}
       </div>
 
       <div className="pt-4 border-t border-slate-100">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-bold text-slate-800">Variantlar</h3>
-          <button
-            type="button"
-            onClick={handleAddVariant}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-[#6366f1] rounded-xl text-xs font-bold hover:bg-[#6366f1] hover:text-white transition-all"
-          >
-            <Plus className="w-3.5 h-3.5" /> Qo'shish
-          </button>
-        </div>
+        {(() => {
+          const variants = formData.variants || [];
+          const isSingle = variants.length <= 1;
+          const v = variants[0] || { name: '', quantity: '', sale_price: '', cost_price: '', currency: 'usd', unit: 'dona' };
+          const updateSingle = (field, value) => {
+            setFormData({ ...formData, variants: [{ ...v, [field]: value }] });
+          };
+          const isUzs = (v.currency || 'usd') === 'uzs';
+          const symbol = isUzs ? "so'm" : '$';
+          const symbolClass = isUzs ? 'text-[#6366f1]' : 'text-emerald-600';
 
-        {!(formData.variants?.length) ? (
-          <p className="text-xs text-slate-400 text-center py-3">Variant qo'shilmagan</p>
-        ) : (
-          <div className="space-y-3">
-            {formData.variants.map((variant, idx) => {
-              const updateVariant = (field, value) => {
-                const newVariants = [...formData.variants];
-                newVariants[idx] = { ...newVariants[idx], [field]: value };
-                setFormData({ ...formData, variants: newVariants });
-              };
-              const removeVariant = () => requestRemoveVariant(variant, idx);
-              const isUzs = (variant.currency || 'uzs') === 'uzs';
-              const symbol = isUzs ? "so'm" : '$';
-              const symbolClass = isUzs ? 'text-[#6366f1]' : 'text-emerald-600';
-              return (
-                <div key={idx} className="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-3">
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Nomi</label>
-                    <input value={variant.name || ''} onChange={e => updateVariant('name', e.target.value)} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none" placeholder="Masalan: XL, Qizil" />
+          const labelClass = "block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5";
+          const priceInputClass = (uzs) => `w-full py-3 bg-white border border-slate-200 rounded-xl text-sm font-medium outline-none focus:border-[#6366f1] ${uzs ? 'pl-14' : 'pl-8'} pr-3`;
+
+          if (isSingle) {
+            return (
+              <div className="space-y-4">
+                <div>
+                  <label className={labelClass}>Miqdor</label>
+                  <div className="flex items-center gap-2">
+                    <button type="button" onClick={() => updateSingle('quantity', Math.max(0, (parseInt(v.quantity) || 0) - 1))} className="w-11 h-11 rounded-xl bg-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-300 active:scale-90 transition-all shrink-0">
+                      <Minus className="w-5 h-5" />
+                    </button>
+                    <input type="number" value={v.quantity || ''} onChange={e => updateSingle('quantity', e.target.value)} className="flex-1 h-11 text-center font-bold text-slate-900 bg-white border border-slate-200 rounded-xl text-base outline-none focus:border-[#6366f1]" placeholder="0" />
+                    <button type="button" onClick={() => updateSingle('quantity', (parseInt(v.quantity) || 0) + 1)} className="w-11 h-11 rounded-xl bg-[#6366f1] flex items-center justify-center text-white hover:bg-blue-700 active:scale-90 transition-all shrink-0">
+                      <Plus className="w-5 h-5" />
+                    </button>
                   </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Birlik</label>
-                    <select value={variant.unit || 'dona'} onChange={e => updateVariant('unit', e.target.value)} className="w-full h-9 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none">
-                      <option value="dona">Dona</option>
-                      <option value="kg">Kg</option>
-                      <option value="litr">Litr</option>
-                      <option value="metr">Metr</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Miqdor</label>
-                    <div className="flex items-center gap-1.5">
-                      <button type="button" onClick={() => updateVariant('quantity', Math.max(0, (parseInt(variant.quantity) || 0) - 1))} className="w-9 h-9 rounded-xl bg-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-300 active:scale-90 transition-all shrink-0">
-                        <Minus className="w-4 h-4" />
-                      </button>
-                      <input type="number" value={variant.quantity || ''} onChange={e => updateVariant('quantity', e.target.value)} className="flex-1 h-9 text-center font-bold text-slate-900 bg-white border border-slate-200 rounded-xl text-xs outline-none focus:border-[#6366f1]" placeholder="0" />
-                      <button type="button" onClick={() => updateVariant('quantity', (parseInt(variant.quantity) || 0) + 1)} className="w-9 h-9 rounded-xl bg-[#6366f1] flex items-center justify-center text-white hover:bg-blue-700 active:scale-90 transition-all shrink-0">
-                        <Plus className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">Valyuta</label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => { updateVariant('currency', 'usd'); }}
-                        className={`py-2 rounded-xl font-bold text-xs transition-all ${!isUzs ? 'bg-emerald-500 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-100'}`}
-                      >
-                        $ (USD)
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => { updateVariant('currency', 'uzs'); }}
-                        className={`py-2 rounded-xl font-bold text-xs transition-all ${isUzs ? 'bg-[#6366f1] text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-100'}`}
-                      >
-                        so'm (UZS)
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Tan narx</label>
-                    <div className="relative">
-                      <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold ${symbolClass}`}>{symbol}</span>
-                      <input type="number" value={variant.cost_price || ''} onChange={e => updateVariant('cost_price', e.target.value)} className={`w-full py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none ${isUzs ? 'pl-12' : 'pl-7'} pr-3`} placeholder="0" />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Sotuv narxi</label>
-                    <div className="relative">
-                      <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold ${symbolClass}`}>{symbol}</span>
-                      <input type="number" value={variant.sale_price || ''} onChange={e => updateVariant('sale_price', e.target.value)} className={`w-full py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none ${isUzs ? 'pl-12' : 'pl-7'} pr-3`} placeholder="0" />
-                    </div>
-                  </div>
-
-                  <button type="button" onClick={removeVariant} className="w-full py-2 bg-red-50 text-red-500 rounded-xl text-xs font-bold hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-1.5">
-                    <X className="w-3.5 h-3.5" /> O'chirish
-                  </button>
                 </div>
-              );
-            })}
-            <div ref={variantsEndRef} />
-          </div>
-        )}
+
+                <div>
+                  <label className={labelClass}>Valyuta</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button type="button" onClick={() => updateSingle('currency', 'usd')} className={`py-3 rounded-xl font-bold text-sm transition-all ${!isUzs ? 'bg-emerald-500 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-100'}`}>$ (USD)</button>
+                    <button type="button" onClick={() => updateSingle('currency', 'uzs')} className={`py-3 rounded-xl font-bold text-sm transition-all ${isUzs ? 'bg-[#6366f1] text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-100'}`}>so'm (UZS)</button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className={labelClass}>Tan narx</label>
+                  <div className="relative">
+                    <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold ${symbolClass}`}>{symbol}</span>
+                    <input type="number" value={v.cost_price || ''} onChange={e => updateSingle('cost_price', e.target.value)} className={priceInputClass(isUzs)} placeholder="0" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className={labelClass}>Sotuv narxi</label>
+                  <div className="relative">
+                    <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold ${symbolClass}`}>{symbol}</span>
+                    <input type="number" value={v.sale_price || ''} onChange={e => updateSingle('sale_price', e.target.value)} className={priceInputClass(isUzs)} placeholder="0" />
+                  </div>
+                </div>
+
+                <button type="button" onClick={handleAddVariant} className="w-full py-3 bg-indigo-50 text-[#6366f1] rounded-xl text-sm font-bold hover:bg-[#6366f1] hover:text-white transition-all flex items-center justify-center gap-2 border border-indigo-100">
+                  <Plus className="w-4 h-4" /> Variant qo'shish
+                </button>
+              </div>
+            );
+          }
+
+          const bpSymbol = bpIsUzs ? "so'm" : '$';
+          const bpSymbolClass = bpIsUzs ? 'text-[#6366f1]' : 'text-emerald-600';
+          const bpPriceClass = (uzs) => `w-full py-3 bg-white border border-slate-200 rounded-xl text-sm font-medium outline-none focus:border-[#6366f1] ${uzs ? 'pl-14' : 'pl-8'} pr-3`;
+
+          return (
+            <>
+              {/* Asosiy narx toggle */}
+              <div className="mb-4 p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowBasePrice(!basePriceOpen)}
+                  className="flex items-center gap-2 w-full"
+                >
+                  <span className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all shrink-0 ${basePriceOpen ? 'bg-[#6366f1] border-[#6366f1]' : 'border-slate-300 bg-white'}`}>
+                    {basePriceOpen && <Check className="w-3 h-3 text-white" />}
+                  </span>
+                  <span className="text-sm font-semibold text-slate-700">Asosiy narx</span>
+                  <span className="text-xs text-slate-400 ml-auto">barcha variantlar uchun</span>
+                </button>
+                {basePriceOpen && (
+                  <div className="mt-3 space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      <button type="button" onClick={() => updateBasePrice({ ...basePrice, currency: 'usd' })} className={`py-2.5 rounded-xl font-bold text-sm transition-all ${!bpIsUzs ? 'bg-emerald-500 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-100'}`}>$ (USD)</button>
+                      <button type="button" onClick={() => updateBasePrice({ ...basePrice, currency: 'uzs' })} className={`py-2.5 rounded-xl font-bold text-sm transition-all ${bpIsUzs ? 'bg-[#6366f1] text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-100'}`}>so'm (UZS)</button>
+                    </div>
+                    <div>
+                      <label className={labelClass}>Tan narx</label>
+                      <div className="relative">
+                        <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold ${bpSymbolClass}`}>{bpSymbol}</span>
+                        <input type="number" value={basePrice.cost_price} onChange={e => updateBasePrice({ ...basePrice, cost_price: e.target.value })} className={bpPriceClass(bpIsUzs)} placeholder="0" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className={labelClass}>Sotuv narxi</label>
+                      <div className="relative">
+                        <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold ${bpSymbolClass}`}>{bpSymbol}</span>
+                        <input type="number" value={basePrice.sale_price} onChange={e => updateBasePrice({ ...basePrice, sale_price: e.target.value })} className={bpPriceClass(bpIsUzs)} placeholder="0" />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-bold text-slate-800">Variantlar</h3>
+                <button type="button" onClick={handleAddVariant} className="flex items-center gap-1.5 px-3 py-2 bg-indigo-50 text-[#6366f1] rounded-xl text-sm font-bold hover:bg-[#6366f1] hover:text-white transition-all">
+                  <Plus className="w-4 h-4" /> Qo'shish
+                </button>
+              </div>
+              <div className="space-y-3">
+                {variants.map((variant, idx) => {
+                  const updateVariant = (field, value) => {
+                    const newVariants = [...variants];
+                    newVariants[idx] = { ...newVariants[idx], [field]: value };
+                    setFormData({ ...formData, variants: newVariants });
+                  };
+                  const removeVariant = () => requestRemoveVariant(variant, idx);
+                  const vIsUzs = (variant.currency || 'usd') === 'uzs';
+                  const vSymbol = vIsUzs ? "so'm" : '$';
+                  const vSymbolClass = vIsUzs ? 'text-[#6366f1]' : 'text-emerald-600';
+                  return (
+                    <div key={idx} className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-4">
+                      <div>
+                        <label className={labelClass}>Nomi</label>
+                        <input value={variant.name || ''} onChange={e => updateVariant('name', e.target.value)} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:border-[#6366f1]" placeholder="Masalan: XL, Qizil" />
+                      </div>
+                      <div>
+                        <label className={labelClass}>Miqdor</label>
+                        <div className="flex items-center gap-2">
+                          <button type="button" onClick={() => updateVariant('quantity', Math.max(0, (parseInt(variant.quantity) || 0) - 1))} className="w-11 h-11 rounded-xl bg-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-300 active:scale-90 transition-all shrink-0"><Minus className="w-5 h-5" /></button>
+                          <input type="number" value={variant.quantity || ''} onChange={e => updateVariant('quantity', e.target.value)} className="flex-1 h-11 text-center font-bold text-slate-900 bg-white border border-slate-200 rounded-xl text-base outline-none focus:border-[#6366f1]" placeholder="0" />
+                          <button type="button" onClick={() => updateVariant('quantity', (parseInt(variant.quantity) || 0) + 1)} className="w-11 h-11 rounded-xl bg-[#6366f1] flex items-center justify-center text-white hover:bg-blue-700 active:scale-90 transition-all shrink-0"><Plus className="w-5 h-5" /></button>
+                        </div>
+                      </div>
+                      <div>
+                        <label className={labelClass}>Valyuta</label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <button type="button" onClick={() => updateVariant('currency', 'usd')} className={`py-3 rounded-xl font-bold text-sm transition-all ${!vIsUzs ? 'bg-emerald-500 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-100'}`}>$ (USD)</button>
+                          <button type="button" onClick={() => updateVariant('currency', 'uzs')} className={`py-3 rounded-xl font-bold text-sm transition-all ${vIsUzs ? 'bg-[#6366f1] text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-100'}`}>so'm (UZS)</button>
+                        </div>
+                      </div>
+                      <div>
+                        <label className={labelClass}>Tan narx</label>
+                        <div className="relative">
+                          <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold ${vSymbolClass}`}>{vSymbol}</span>
+                          <input type="number" value={variant.cost_price || ''} onChange={e => updateVariant('cost_price', e.target.value)} className={priceInputClass(vIsUzs)} placeholder="0" />
+                        </div>
+                      </div>
+                      <div>
+                        <label className={labelClass}>Sotuv narxi</label>
+                        <div className="relative">
+                          <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold ${vSymbolClass}`}>{vSymbol}</span>
+                          <input type="number" value={variant.sale_price || ''} onChange={e => updateVariant('sale_price', e.target.value)} className={priceInputClass(vIsUzs)} placeholder="0" />
+                        </div>
+                      </div>
+                      <button type="button" onClick={removeVariant} className="w-full py-3 bg-red-50 text-red-500 rounded-xl text-sm font-bold hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-1.5">
+                        <X className="w-4 h-4" /> O'chirish
+                      </button>
+                    </div>
+                  );
+                })}
+                <button type="button" onClick={handleAddVariant} className="w-full py-3 bg-indigo-50 text-[#6366f1] rounded-xl text-sm font-bold hover:bg-[#6366f1] hover:text-white transition-all flex items-center justify-center gap-2 border border-indigo-100">
+                  <Plus className="w-4 h-4" /> Variant qo'shish
+                </button>
+                <div ref={variantsEndRef} />
+              </div>
+            </>
+          );
+        })()}
       </div>
 
       <div className="flex gap-3 pt-2">
@@ -355,15 +483,6 @@ const VariantForm = ({ formData, setFormData, onSubmit, submitLabel, isPending }
         <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className={inputClass} placeholder="Masalan: Qizil, XL, yoki 1KG" />
       </div>
 
-      <div>
-        <label className="block text-xs font-semibold text-slate-500 mb-1.5">Birlik</label>
-        <select value={formData.unit} onChange={(e) => setFormData({ ...formData, unit: e.target.value })} className={inputClass}>
-          <option value="dona">Dona</option>
-          <option value="kg">Kg</option>
-          <option value="litr">Litr</option>
-          <option value="metr">Metr</option>
-        </select>
-      </div>
 
       <div>
         <label className="block text-xs font-semibold text-slate-500 mb-1.5">Miqdor</label>
@@ -563,9 +682,10 @@ const Warehouse = () => {
       payload.description = formData.description;
     }
     if (formData.variants && formData.variants.length > 0) {
+      const isSingleVariant = formData.variants.length === 1;
       payload.variants = formData.variants.map(v => ({
         ...(v.id ? { id: v.id } : {}),
-        name: v.name || '',
+        name: v.name || (isSingleVariant ? 'Asosiy' : ''),
         cost_price: v.cost_price || '0',
         sale_price: v.sale_price || '0',
         currency: v.currency || 'uzs',
@@ -599,6 +719,18 @@ const Warehouse = () => {
       setShowDeleteModal(false);
       setSelectedProduct(null);
     } catch (error) {}
+  };
+
+  const openAddModal = () => {
+    setFormData({
+      name: '',
+      category: '',
+      description: '',
+      image: 'string',
+      is_active: true,
+      variants: [{ name: '', quantity: '', sale_price: '', cost_price: '', currency: 'usd', unit: 'dona', is_active: true }]
+    });
+    setShowAddModal(true);
   };
 
   const openEditModal = (product) => {
@@ -757,7 +889,7 @@ const Warehouse = () => {
                 Kategoriyalar
               </button>
               <button
-                onClick={() => setShowAddModal(true)}
+                onClick={openAddModal}
                 className="px-3 py-5 bg-[#6366f1] text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm"
               >
                 <Plus className="w-3.5 h-3.5" />
@@ -827,7 +959,7 @@ const Warehouse = () => {
             </p>
             {!searchTerm && (
               <button
-                onClick={() => setShowAddModal(true)}
+                onClick={openAddModal}
                 className="mt-5 px-6 py-3 bg-[#6366f1] text-white rounded-2xl font-bold flex items-center gap-2 shadow-sm text-sm"
               >
                 <Plus className="w-4 h-4" /> Mahsulot qo'shish
@@ -852,15 +984,15 @@ const Warehouse = () => {
                     <div className="flex gap-1.5 shrink-0">
                       <button
                         onClick={() => openEditModal(product)}
-                        className="w-8 h-8 bg-slate-50 text-[#6366f1] rounded-xl flex items-center justify-center hover:bg-[#6366f1] hover:text-white transition-all"
+                        className="w-10 h-10 bg-slate-50 text-[#6366f1] rounded-xl flex items-center justify-center hover:bg-[#6366f1] hover:text-white transition-all"
                       >
-                        <PencilSimple className="w-3.5 h-3.5" />
+                        <PencilSimple className="w-5 h-5" />
                       </button>
                       <button
                         onClick={() => openDeleteModal(product)}
-                        className="w-8 h-8 bg-red-50 text-red-400 rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all"
+                        className="w-10 h-10 bg-red-50 text-red-400 rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all"
                       >
-                        <Trash className="w-3.5 h-3.5" />
+                        <Trash className="w-5 h-5" />
                       </button>
                     </div>
                   </div>
@@ -880,13 +1012,13 @@ const Warehouse = () => {
                   {/* Variants toggle */}
                   <button
                     onClick={() => setExpandedProductId(isExpanded ? null : product.id)}
-                    className="mx-3 mb-2.5 flex items-center justify-between px-3 py-2 bg-slate-50 rounded-xl text-xs font-semibold text-slate-500 hover:bg-indigo-50 hover:text-[#6366f1] transition-all"
+                    className="mx-3 mb-2.5 flex items-center justify-between px-4 py-3 bg-slate-50 rounded-xl text-sm font-semibold text-slate-500 hover:bg-indigo-50 hover:text-[#6366f1] transition-all"
                   >
-                    <span className="flex items-center gap-1.5">
-                      <Stack className="w-3.5 h-3.5" />
+                    <span className="flex items-center gap-2">
+                      <Stack className="w-5 h-5" />
                       {variants.length} ta variant
                     </span>
-                    <CaretRight className={`w-3.5 h-3.5 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                    <CaretRight className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
                   </button>
 
                   {/* Expanded variant list */}
@@ -913,12 +1045,12 @@ const Warehouse = () => {
                                   <p className="text-xs font-black text-slate-900">{v.quantity}</p>
                                   <p className="text-[9px] text-slate-400">{v.unit || 'dona'}</p>
                                 </div>
-                                <div className="flex gap-1 shrink-0">
-                                  <button onClick={() => openEditVariantModal(product, v)} className="w-6 h-6 text-[#6366f1] bg-slate-50 rounded-lg flex items-center justify-center hover:bg-[#6366f1] hover:text-white transition-all">
-                                    <PencilSimple className="w-3 h-3" />
+                                <div className="flex gap-1.5 shrink-0">
+                                  <button onClick={() => openEditVariantModal(product, v)} className="w-8 h-8 text-[#6366f1] bg-slate-50 rounded-lg flex items-center justify-center hover:bg-[#6366f1] hover:text-white transition-all">
+                                    <PencilSimple className="w-4 h-4" />
                                   </button>
-                                  <button onClick={() => openDeleteVariantModal(v)} className="w-6 h-6 text-red-400 bg-red-50 rounded-lg flex items-center justify-center hover:bg-red-500 hover:text-white transition-all">
-                                    <Trash className="w-3 h-3" />
+                                  <button onClick={() => openDeleteVariantModal(v)} className="w-8 h-8 text-red-400 bg-red-50 rounded-lg flex items-center justify-center hover:bg-red-500 hover:text-white transition-all">
+                                    <Trash className="w-4 h-4" />
                                   </button>
                                 </div>
                               </div>
@@ -929,9 +1061,9 @@ const Warehouse = () => {
                       <div className="p-3 pt-1">
                         <button
                           onClick={() => openAddVariantModal(product)}
-                          className="w-full flex items-center justify-center gap-1.5 py-2 bg-indigo-50 text-[#6366f1] rounded-xl text-xs font-bold hover:bg-[#6366f1] hover:text-white transition-all"
+                          className="w-full flex items-center justify-center gap-2 py-3 bg-indigo-50 text-[#6366f1] rounded-xl text-sm font-bold hover:bg-[#6366f1] hover:text-white transition-all"
                         >
-                          <Plus className="w-3.5 h-3.5" /> Variant qo'shish
+                          <Plus className="w-5 h-5" /> Variant qo'shish
                         </button>
                       </div>
                     </div>
